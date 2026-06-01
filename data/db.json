@@ -1,0 +1,142 @@
+[
+  {
+    "id": "demo-living-room",
+    "name": "Luxury Penthouse Suite",
+    "description": "Modern, high-ceiling luxury penthouse with panoramic city views and minimalist interior design.",
+    "isPublished": true,
+    "createdAt": "2026-06-01T09:38:21.305Z",
+    "updatedAt": "2026-06-01T09:38:21.305Z",
+    "panoramas": [
+      {
+        "id": "pano-living-room",
+        "projectId": "demo-living-room",
+        "name": "Living Room Central",
+        "rawImages": [
+          "frame_0.jpg",
+          "frame_1.jpg",
+          "frame_2.jpg",
+          "frame_3.jpg",
+          "frame_4.jpg",
+          "frame_5.jpg",
+          "frame_6.jpg",
+          "frame_7.jpg",
+          "frame_8.jpg",
+          "frame_9.jpg",
+          "frame_10.jpg",
+          "frame_11.jpg"
+        ],
+        "stitchedUrl": "/samples/luxury_living_room.jpg",
+        "status": "completed",
+        "hotspots": [
+          {
+            "id": "hotspot-to-balcony",
+            "panoramaId": "pano-living-room",
+            "type": "scene",
+            "pitch": 0,
+            "yaw": 135,
+            "title": "Walk to Ocean Balcony",
+            "targetPanoramaId": "pano-balcony"
+          },
+          {
+            "id": "hotspot-info-tv",
+            "panoramaId": "pano-living-room",
+            "type": "info",
+            "pitch": -5,
+            "yaw": -45,
+            "title": "Smart Home Automation Screen",
+            "description": "Integrated 85-inch 8K OLED TV and spatial soundbar controlling ambient lighting, temperature, and audio zones."
+          }
+        ],
+        "createdAt": "2026-06-01T09:38:21.305Z",
+        "updatedAt": "2026-06-01T09:38:21.305Z"
+      },
+      {
+        "id": "pano-balcony",
+        "projectId": "demo-living-room",
+        "name": "Oceanfront Balcony",
+        "rawImages": [
+          "frame_0.jpg",
+          "frame_1.jpg",
+          "frame_2.jpg",
+          "frame_3.jpg",
+          "frame_4.jpg",
+          "frame_5.jpg",
+          "frame_6.jpg",
+          "frame_7.jpg",
+          "frame_8.jpg",
+          "frame_9.jpg",
+          "frame_10.jpg",
+          "frame_11.jpg"
+        ],
+        "stitchedUrl": "/samples/luxury_balcony.jpg",
+        "status": "completed",
+        "hotspots": [
+          {
+            "id": "hotspot-back-to-living",
+            "panoramaId": "pano-balcony",
+            "type": "scene",
+            "pitch": 0,
+            "yaw": -45,
+            "title": "Return to Living Room",
+            "targetPanoramaId": "pano-living-room"
+          },
+          {
+            "id": "hotspot-info-sunset",
+            "panoramaId": "pano-balcony",
+            "type": "info",
+            "pitch": 10,
+            "yaw": 180,
+            "title": "180° Panoramic View",
+            "description": "Breathtaking unimpeded direct ocean views offering world-class sunset displays every single evening."
+          }
+        ],
+        "createdAt": "2026-06-01T09:38:21.305Z",
+        "updatedAt": "2026-06-01T09:38:21.305Z"
+      }
+    ]
+  },
+  {
+    "id": "proj-ixs3emqsf",
+    "name": "home",
+    "description": ".\n",
+    "isPublished": false,
+    "createdAt": "2026-06-01T09:39:39.908Z",
+    "updatedAt": "2026-06-01T09:40:07.614Z",
+    "panoramas": [
+      {
+        "id": "pano-ctzqtqsau",
+        "projectId": "proj-ixs3emqsf",
+        "name": "Main Space",
+        "rawImages": [
+          "frame_0.jpg",
+          "frame_1.jpg",
+          "frame_2.jpg",
+          "frame_3.jpg",
+          "frame_4.jpg",
+          "frame_5.jpg",
+          "frame_6.jpg",
+          "frame_7.jpg",
+          "frame_8.jpg",
+          "frame_9.jpg",
+          "frame_10.jpg",
+          "frame_11.jpg"
+        ],
+        "status": "completed",
+        "hotspots": [],
+        "createdAt": "2026-06-01T09:39:39.908Z",
+        "updatedAt": "2026-06-01T09:39:51.912Z",
+        "stitchedUrl": "/uploads/proj-ixs3emqsf/stitched_pano-ctzqtqsau.jpg"
+      },
+      {
+        "id": "pano-nm7w8ldtg",
+        "projectId": "proj-ixs3emqsf",
+        "name": "home",
+        "rawImages": [],
+        "status": "pending",
+        "hotspots": [],
+        "createdAt": "2026-06-01T09:40:07.584Z",
+        "updatedAt": "2026-06-01T09:40:07.585Z"
+      }
+    ]
+  }
+]
