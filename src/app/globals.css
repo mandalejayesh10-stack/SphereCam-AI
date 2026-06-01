@@ -1,0 +1,150 @@
+@import "tailwindcss";
+
+:root {
+  /* Default Dark Mode Variables */
+  --background: #040206;
+  --foreground: #f8fafc;
+  --accent: #ec4899;           /* Electric Pink */
+  --accent-foreground: #ffffff;
+  --card: #0d0814;              /* Deep Purple Slate */
+  --card-border: rgba(236, 72, 153, 0.08);
+  --panel-bg: rgba(13, 8, 20, 0.7);
+  --text-muted: #94a3b8;
+  --border-muted: rgba(255, 255, 255, 0.05);
+}
+
+body.light {
+  /* Premium Light Mode Variables */
+  --background: #faf9fc;
+  --foreground: #120c22;
+  --accent: #db2777;           /* Deep Pink for high contrast */
+  --accent-foreground: #ffffff;
+  --card: #ffffff;
+  --card-border: rgba(219, 39, 119, 0.12);
+  --panel-bg: rgba(255, 255, 255, 0.85);
+  --text-muted: #5e6b7e;
+  --border-muted: rgba(18, 12, 34, 0.08);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-accent: var(--accent);
+  --color-card: var(--card);
+  --color-card-border: var(--card-border);
+  --color-panel-bg: var(--panel-bg);
+  --color-text-muted: var(--text-muted);
+  --color-border-muted: var(--border-muted);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Custom Premium Glassmorphism */
+.glass-panel {
+  background: var(--panel-bg);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--card-border);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.glass-panel-heavy {
+  background: var(--card);
+  backdrop-filter: blur(24px);
+  border: 1px solid var(--card-border);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.glass-card-hover {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.glass-card-hover:hover {
+  transform: translateY(-2px);
+  background: var(--panel-bg);
+  border-color: var(--accent);
+  box-shadow: 0 10px 30px -10px rgba(236, 72, 153, 0.15);
+}
+
+body.light .glass-card-hover:hover {
+  box-shadow: 0 10px 30px -10px rgba(219, 39, 119, 0.1);
+}
+
+/* Grid overlay background with pink/purple tint */
+.grid-bg {
+  background-image: 
+    linear-gradient(to right, rgba(236, 72, 153, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(139, 92, 246, 0.02) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+body.light .grid-bg {
+  background-image: 
+    linear-gradient(to right, rgba(236, 72, 153, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(139, 92, 246, 0.04) 1px, transparent 1px);
+}
+
+/* Radar Sweep Animation for processing panoramas */
+@keyframes radar-sweep {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+.radar-sweep {
+  animation: radar-sweep 4s linear infinite;
+}
+
+/* Pulsing alignment helper with Pink Glow */
+@keyframes pulse-glow {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(236, 72, 153, 0.7);
+  }
+  50% {
+    transform: scale(1.15);
+    box-shadow: 0 0 12px 6px rgba(236, 72, 153, 0);
+  }
+}
+.pulse-glow {
+  animation: pulse-glow 2s infinite ease-in-out;
+}
+
+/* Custom Scrollbar in Pink */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(236, 72, 153, 0.15);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(236, 72, 153, 0.6);
+}
+
+/* Shutter flash animation */
+@keyframes camera-shutter {
+  0% { opacity: 0; }
+  15% { opacity: 0.95; }
+  100% { opacity: 0; }
+}
+.shutter-flash {
+  animation: camera-shutter 0.25s ease-out forwards;
+}
+
+/* Pink to Purple Gradient Text */
+.gradient-text {
+  background: linear-gradient(135deg, var(--foreground) 30%, var(--accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
