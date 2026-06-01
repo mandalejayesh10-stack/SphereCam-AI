@@ -8,11 +8,15 @@ const UPLOADS_DIR = path.join(process.cwd(), 'public', 'uploads');
 
 // Ensure database folders exist
 function initDirectories() {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  }
-  if (!fs.existsSync(UPLOADS_DIR)) {
-    fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+  try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+    if (!fs.existsSync(UPLOADS_DIR)) {
+      fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+    }
+  } catch (e) {
+    console.warn('Directory initialization skipped (Serverless Read-Only Environment detected)');
   }
 }
 
@@ -92,13 +96,28 @@ const DEFAULT_DATA: Project[] = [
 
 export function readDb(): Project[] {
   initDirectories();
+  
+  // Return global in-memory state if active (Serverless environments)
+  if ((global as any).vercelInMemoryDb) {
+    return (global as any).vercelInMemoryDb;
+  }
+
   if (!fs.existsSync(DB_FILE)) {
-    fs.writeFileSync(DB_FILE, JSON.stringify(DEFAULT_DATA, null, 2), 'utf-8');
+    try {
+      fs.writeFileSync(DB_FILE, JSON.stringify(DEFAULT_DATA, null, 2), 'utf-8');
+    } catch (e) {
+      console.warn('Writing DB file failed. Initializing memory cache fallback.');
+      (global as any).vercelInMemoryDb = DEFAULT_DATA;
+    }
     return DEFAULT_DATA;
   }
+  
   try {
     const content = fs.readFileSync(DB_FILE, 'utf-8');
-    return JSON.parse(content);
+    const parsed = JSON.parse(content);
+    // Sync to memory
+    (global as any).vercelInMemoryDb = parsed;
+    return parsed;
   } catch (error) {
     console.error('Error reading JSON DB file, resetting to empty', error);
     return [];
@@ -107,7 +126,19 @@ export function readDb(): Project[] {
 
 export function writeDb(data: Project[]): void {
   initDirectories();
-  fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf-8');
+  
+  // Sync to memory
+  (global as any).vercelInMemoryDb = data;
+
+  try {
+    fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf-8');
+  } catch (error: any) {
+    if (error.code === 'EROFS') {
+      console.warn('Vercel serverless read-only filesystem EROFS intercepted. Memory cache handles local updates.');
+    } else {
+      console.error('Local JSON file write failed', error);
+    }
+  }
 }
 
 export function getProjects(): Project[] {

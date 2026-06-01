@@ -23,23 +23,36 @@ export async function POST(request: Request) {
     }
 
     // Prepare uploads directory
-    const projectUploadDir = path.join(process.cwd(), 'public', 'uploads', projectId);
-    if (!fs.existsSync(projectUploadDir)) {
-      fs.mkdirSync(projectUploadDir, { recursive: true });
+    try {
+      const projectUploadDir = path.join(process.cwd(), 'public', 'uploads', projectId);
+      if (!fs.existsSync(projectUploadDir)) {
+        fs.mkdirSync(projectUploadDir, { recursive: true });
+      }
+    } catch (e) {
+      console.warn('Upload directory creation skipped (Serverless Read-Only Environment detected)');
     }
 
     const savedFilenames: string[] = [];
 
     // Save base64 frames to disk
     images.forEach((imgBase64: string, index: number) => {
-      // Remove base64 data header
-      const base64Data = imgBase64.replace(/^data:image\/\w+;base64,/, '');
-      const buffer = Buffer.from(base64Data, 'base64');
-      const filename = `frame_${index}_${Date.now()}.jpg`;
-      const filePath = path.join(projectUploadDir, filename);
+      try {
+        const projectUploadDir = path.join(process.cwd(), 'public', 'uploads', projectId);
+        const base64Data = imgBase64.replace(/^data:image\/\w+;base64,/, '');
+        const buffer = Buffer.from(base64Data, 'base64');
+        const filename = `frame_${index}_${Date.now()}.jpg`;
+        const filePath = path.join(projectUploadDir, filename);
 
-      fs.writeFileSync(filePath, buffer);
-      savedFilenames.push(`/uploads/${projectId}/${filename}`);
+        fs.writeFileSync(filePath, buffer);
+        savedFilenames.push(`/uploads/${projectId}/${filename}`);
+      } catch (err: any) {
+        if (err.code === 'EROFS') {
+          // If serverless filesystem is read-only, keep the captured image as direct in-memory base64!
+          savedFilenames.push(imgBase64);
+        } else {
+          throw err;
+        }
+      }
     });
 
     // Update state in database
