@@ -26,16 +26,30 @@ export async function GET(request: Request) {
 
     for (const pano of project.panoramas) {
       if (pano.status === 'completed' && pano.stitchedUrl) {
-        // Resolve path to the stitched image (supports public/uploads and public/samples)
-        let sourcePath = '';
-        if (pano.stitchedUrl.startsWith('/samples/')) {
-          sourcePath = path.join(process.cwd(), 'public', 'samples', path.basename(pano.stitchedUrl));
-        } else if (pano.stitchedUrl.startsWith('/uploads/')) {
-          sourcePath = path.join(process.cwd(), 'public', 'uploads', projectId, path.basename(pano.stitchedUrl));
+        let imageBuffer: Buffer | null = null;
+
+        if (pano.stitchedUrl.startsWith('data:image/')) {
+          try {
+            const base64Data = pano.stitchedUrl.replace(/^data:image\/\w+;base64,/, '');
+            imageBuffer = Buffer.from(base64Data, 'base64');
+          } catch (e) {
+            console.error(`Failed to decode base64 for panorama ${pano.id}`, e);
+          }
+        } else {
+          // Resolve path to the stitched image (supports public/uploads and public/samples)
+          let sourcePath = '';
+          if (pano.stitchedUrl.startsWith('/samples/')) {
+            sourcePath = path.join(process.cwd(), 'public', 'samples', path.basename(pano.stitchedUrl));
+          } else if (pano.stitchedUrl.startsWith('/uploads/')) {
+            sourcePath = path.join(process.cwd(), 'public', 'uploads', projectId, path.basename(pano.stitchedUrl));
+          }
+
+          if (sourcePath && fs.existsSync(sourcePath)) {
+            imageBuffer = fs.readFileSync(sourcePath);
+          }
         }
 
-        if (fs.existsSync(sourcePath)) {
-          const imageBuffer = fs.readFileSync(sourcePath);
+        if (imageBuffer) {
           const zipImageFilename = `${pano.id}.jpg`;
           
           // Add to ZIP images/ folder
