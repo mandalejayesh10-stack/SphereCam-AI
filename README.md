@@ -75,4 +75,5 @@ The project has been optimized to compile seamlessly on Vercel:
 
 ---
 
-*Designed and engineered with ♥ by the SphereCam AI Team.*
+*Designed and engineered with ♥ by the SphereCam AI Team (including @dev1aryan7-bot).*
+
