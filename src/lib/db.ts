@@ -48,6 +48,15 @@ const DEFAULT_DATA: Project[] = [
             targetPanoramaId: 'pano-balcony'
           },
           {
+            id: 'hotspot-to-bedroom',
+            panoramaId: 'pano-living-room',
+            type: 'scene',
+            pitch: 0,
+            yaw: -135,
+            title: 'Enter Master Bedroom',
+            targetPanoramaId: 'pano-bedroom'
+          },
+          {
             id: 'hotspot-info-tv',
             panoramaId: 'pano-living-room',
             type: 'info',
@@ -85,6 +94,36 @@ const DEFAULT_DATA: Project[] = [
             yaw: 180,
             title: '180° Panoramic View',
             description: 'Breathtaking unimpeded direct ocean views offering world-class sunset displays every single evening.'
+          }
+        ],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      {
+        id: 'pano-bedroom',
+        projectId: 'demo-living-room',
+        name: 'Master Bedroom',
+        rawImages: Array.from({ length: 12 }, (_, i) => `frame_${i}.jpg`),
+        stitchedUrl: '/samples/luxury_bedroom.png',
+        status: 'completed',
+        hotspots: [
+          {
+            id: 'hotspot-back-to-living-from-bedroom',
+            panoramaId: 'pano-bedroom',
+            type: 'scene',
+            pitch: 0,
+            yaw: 45,
+            title: 'Return to Living Room',
+            targetPanoramaId: 'pano-living-room'
+          },
+          {
+            id: 'hotspot-bedroom-bed',
+            panoramaId: 'pano-bedroom',
+            type: 'info',
+            pitch: -10,
+            yaw: -90,
+            title: 'King Size Smart Bed',
+            description: 'Premium memory foam mattress with built-in sleep tracking, automated head elevation, and under-bed warm LED lighting.'
           }
         ],
         createdAt: new Date().toISOString(),

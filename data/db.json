@@ -38,6 +38,15 @@
             "targetPanoramaId": "pano-balcony"
           },
           {
+            "id": "hotspot-to-bedroom",
+            "panoramaId": "pano-living-room",
+            "type": "scene",
+            "pitch": 0,
+            "yaw": -135,
+            "title": "Enter Master Bedroom",
+            "targetPanoramaId": "pano-bedroom"
+          },
+          {
             "id": "hotspot-info-tv",
             "panoramaId": "pano-living-room",
             "type": "info",
@@ -88,6 +97,49 @@
             "yaw": 180,
             "title": "180° Panoramic View",
             "description": "Breathtaking unimpeded direct ocean views offering world-class sunset displays every single evening."
+          }
+        ],
+        "createdAt": "2026-06-01T09:38:21.305Z",
+        "updatedAt": "2026-06-01T09:38:21.305Z"
+      },
+      {
+        "id": "pano-bedroom",
+        "projectId": "demo-living-room",
+        "name": "Master Bedroom",
+        "rawImages": [
+          "frame_0.jpg",
+          "frame_1.jpg",
+          "frame_2.jpg",
+          "frame_3.jpg",
+          "frame_4.jpg",
+          "frame_5.jpg",
+          "frame_6.jpg",
+          "frame_7.jpg",
+          "frame_8.jpg",
+          "frame_9.jpg",
+          "frame_10.jpg",
+          "frame_11.jpg"
+        ],
+        "stitchedUrl": "/samples/luxury_bedroom.png",
+        "status": "completed",
+        "hotspots": [
+          {
+            "id": "hotspot-back-to-living-from-bedroom",
+            "panoramaId": "pano-bedroom",
+            "type": "scene",
+            "pitch": 0,
+            "yaw": 45,
+            "title": "Return to Living Room",
+            "targetPanoramaId": "pano-living-room"
+          },
+          {
+            "id": "hotspot-bedroom-bed",
+            "panoramaId": "pano-bedroom",
+            "type": "info",
+            "pitch": -10,
+            "yaw": -90,
+            "title": "King Size Smart Bed",
+            "description": "Premium memory foam mattress with built-in sleep tracking, automated head elevation, and under-bed warm LED lighting."
           }
         ],
         "createdAt": "2026-06-01T09:38:21.305Z",
