@@ -8,6 +8,7 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const projectId = searchParams.get('projectId');
+    const format = searchParams.get('format');
 
     if (!projectId) {
       return NextResponse.json({ error: 'Project ID is required' }, { status: 400 });
@@ -550,17 +551,29 @@ export async function GET(request: Request) {
 </body>
 </html>`;
 
+    if (format === 'html') {
+      const fileName = `spherecam-tour-${project.name.toLowerCase().replace(/\s+/g, '-')}.html`;
+      return new Response(htmlTemplate, {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/html; charset=utf-8',
+          'Content-Disposition': `attachment; filename="${fileName}"`
+        }
+      });
+    }
+
     zip.file('index.html', htmlTemplate);
 
     // 3. Compress ZIP in memory
     const zipBuffer = await zip.generateAsync({ type: 'nodebuffer' });
 
     // 4. Return as attachment stream download
+    const fileNameZip = `spherecam-tour-${project.name.toLowerCase().replace(/\s+/g, '-')}.zip`;
     return new Response(new Uint8Array(zipBuffer), {
       status: 200,
       headers: {
         'Content-Type': 'application/zip',
-        'Content-Disposition': `attachment; filename="virtual-tour-${projectId}.zip"`
+        'Content-Disposition': `attachment; filename="${fileNameZip}"`
       }
     });
 

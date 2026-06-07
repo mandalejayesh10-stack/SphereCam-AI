@@ -60,6 +60,7 @@ function EditorPageContent() {
   // Export Drawer State
   const [showExportDrawer, setShowExportDrawer] = useState<boolean>(false);
   const [downloadingTour, setDownloadingTour] = useState<boolean>(false);
+  const [downloadingHtml, setDownloadingHtml] = useState<boolean>(false);
 
   const fetchProject = async () => {
     try {
@@ -351,6 +352,32 @@ function EditorPageContent() {
     }
   };
 
+  const handleDownloadOfflineHtml = async () => {
+    if (!project) return;
+
+    setDownloadingHtml(true);
+    try {
+      const res = await fetch(`/api/projects/download-tour?projectId=${project.id}&format=html`);
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `spherecam-tour-${project.name.toLowerCase().replace(/\s+/g, '-')}.html`);
+        document.body.appendChild(link);
+        link.click();
+        link.parentNode?.removeChild(link);
+      } else {
+        alert('Failed to compile standalone HTML virtual tour.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('HTML compiler encountered a packaging failure.');
+    } finally {
+      setDownloadingHtml(false);
+    }
+  };
+
   const handleDownloadOfflineTour = async () => {
     if (!project) return;
 
@@ -362,7 +389,7 @@ function EditorPageContent() {
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.setAttribute('download', `virtual-tour-${project.name.toLowerCase().replace(/\s+/g, '-')}.zip`);
+        link.setAttribute('download', `spherecam-tour-${project.name.toLowerCase().replace(/\s+/g, '-')}.zip`);
         document.body.appendChild(link);
         link.click();
         link.parentNode?.removeChild(link);
@@ -832,25 +859,45 @@ function EditorPageContent() {
                 <div className="flex-1">
                   <h4 className="text-sm font-bold text-foreground">Standalone Offline Bundle</h4>
                   <p className="text-xs text-text-muted mt-1 leading-relaxed">
-                    Compiles all stitched high-res rooms, hotspots, and WebGL viewer code into a single offline-run HTML bundle wrapped inside a single ZIP file.
+                    Compiles all stitched high-res rooms, hotspots, and WebGL viewer code into a self-contained player.
                   </p>
-                  <button
-                    onClick={handleDownloadOfflineTour}
-                    disabled={downloadingTour}
-                    className="mt-3.5 py-2 px-4 bg-pink-600 hover:bg-pink-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1.5"
-                  >
-                    {downloadingTour ? (
-                      <>
-                        <div className="w-3 h-3 rounded-full border border-white border-t-transparent animate-spin"></div>
-                        <span>Packing Zip Archive...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Download className="w-3.5 h-3.5" />
-                        <span>Download ZIP Package</span>
-                      </>
-                    )}
-                  </button>
+                  <div className="flex flex-wrap gap-3 mt-3.5">
+                    <button
+                      onClick={handleDownloadOfflineHtml}
+                      disabled={downloadingHtml}
+                      className="py-2 px-4 bg-pink-600 hover:bg-pink-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1.5"
+                    >
+                      {downloadingHtml ? (
+                        <>
+                          <div className="w-3 h-3 rounded-full border border-white border-t-transparent animate-spin"></div>
+                          <span>Compiling HTML...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Download className="w-3.5 h-3.5" />
+                          <span>Download Single HTML File</span>
+                        </>
+                      )}
+                    </button>
+                    
+                    <button
+                      onClick={handleDownloadOfflineTour}
+                      disabled={downloadingTour}
+                      className="py-2 px-4 bg-foreground/10 hover:bg-foreground/15 text-foreground disabled:opacity-40 disabled:cursor-not-allowed text-xs font-bold rounded-xl border border-border-muted transition-all flex items-center gap-1.5"
+                    >
+                      {downloadingTour ? (
+                        <>
+                          <div className="w-3 h-3 rounded-full border border-foreground border-t-transparent animate-spin font-semibold"></div>
+                          <span>Packing ZIP...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Download className="w-3.5 h-3.5" />
+                          <span>Download ZIP Package</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
 
