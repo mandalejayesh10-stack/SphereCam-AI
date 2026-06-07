@@ -51,7 +51,7 @@ To run SphereCam AI locally on your machine:
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/mandalejayesh10-stack/SphereCam-AI.git
+git clone https://github.com/modellotus/SphereCam-AI.git
 cd SphereCam-AI
 ```
 
