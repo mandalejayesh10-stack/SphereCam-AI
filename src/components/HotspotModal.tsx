@@ -11,6 +11,7 @@ interface HotspotModalProps {
     title: string;
     description?: string;
     targetPanoramaId?: string;
+    size: number;
   }) => void;
   availableRooms: Array<{ id: string; name: string }>;
 }
@@ -25,6 +26,7 @@ export default function HotspotModal({
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [targetPanoramaId, setTargetPanoramaId] = useState('');
+  const [size, setSize] = useState<number>(40);
 
   if (!isOpen) return null;
 
@@ -36,13 +38,15 @@ export default function HotspotModal({
       type,
       title: title.trim(),
       description: type === 'info' ? description.trim() : undefined,
-      targetPanoramaId: type === 'scene' ? targetPanoramaId : undefined
+      targetPanoramaId: type === 'scene' ? targetPanoramaId : undefined,
+      size
     });
 
     // Reset fields
     setTitle('');
     setDescription('');
     setTargetPanoramaId('');
+    setSize(40);
   };
 
   return (
@@ -146,6 +150,40 @@ export default function HotspotModal({
               )}
             </div>
           )}
+
+          {/* Hotspot Size Slider */}
+          <div>
+            <div className="flex justify-between text-[10px] uppercase font-bold text-slate-500 tracking-wider mb-1.5">
+              <span>Visual Hotspot Size</span>
+              <span className="text-indigo-400 font-bold">{size}px</span>
+            </div>
+            <input
+              type="range"
+              min={20}
+              max={100}
+              value={size}
+              onChange={(e) => setSize(Number(e.target.value))}
+              className="w-full accent-indigo-500 h-1 bg-slate-900 rounded-lg cursor-pointer"
+            />
+            {/* Visual Real-time Preview */}
+            <div className="flex justify-center items-center mt-3 p-4 bg-slate-900/40 rounded-xl border border-white/5 min-h-[60px]">
+              <div
+                style={{ width: `${size}px`, height: `${size}px` }}
+                className={`rounded-full flex items-center justify-center border-2 transition-all duration-150 ${
+                  type === 'scene'
+                    ? 'bg-pink-500/20 border-pink-400'
+                    : 'bg-indigo-500/20 border-indigo-400'
+                }`}
+              >
+                <div
+                  style={{ width: `${Math.max(4, size * 0.3)}px`, height: `${Math.max(4, size * 0.3)}px` }}
+                  className={`rounded-full ${
+                    type === 'scene' ? 'bg-pink-400' : 'bg-indigo-400'
+                  }`}
+                />
+              </div>
+            </div>
+          </div>
 
           {/* Action buttons */}
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/5">

@@ -55,10 +55,19 @@ export async function GET(request: Request) {
           // Add to ZIP images/ folder
           imagesFolder?.file(zipImageFilename, imageBuffer);
 
-          // Update URL in offline JS bundle to point to local images/ folder
+          // Determine the correct mime type
+          let mimeType = 'image/jpeg';
+          if (pano.stitchedUrl.endsWith('.png') || pano.stitchedUrl.startsWith('data:image/png')) {
+            mimeType = 'image/png';
+          }
+
+          // Inline base64 URL inside the offline HTML to bypass browser CORS file:// policy!
+          const base64Url = `data:${mimeType};base64,${imageBuffer.toString('base64')}`;
+
+          // Update URL in offline JS bundle to point to inline base64 string
           updatedPanoramas.push({
             ...pano,
-            stitchedUrl: `./images/${zipImageFilename}`
+            stitchedUrl: base64Url
           });
         }
       }
@@ -105,7 +114,7 @@ export async function GET(request: Request) {
       cursor: grabbing;
     }
     
-    /* Dynamic projected Hotspots overlay container */
+     /* Dynamic projected Hotspots overlay container */
     .hotspot {
       position: absolute;
       transform: translate(-50%, -50%);
@@ -113,83 +122,75 @@ export async function GET(request: Request) {
       transition: transform 0.15s ease-out;
     }
     
-    /* Scene transitions nodes */
-    .hotspot-scene {
-      background: rgba(99, 102, 241, 0.95);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      padding: 8px 14px;
-      border-radius: 99px;
-      color: white;
-      font-size: 11px;
-      font-weight: 700;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-      transition: all 0.2s;
-    }
-    .hotspot-scene:hover {
-      background: #4f46e5;
-      transform: scale(1.05);
-    }
-    .hotspot-scene::before {
-      content: '➔';
-      font-size: 10px;
-    }
-    
-    /* Info Bubble nodes */
-    .hotspot-info {
-      width: 32px;
-      height: 32px;
-      background: rgba(139, 92, 246, 0.95);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      border-radius: 50%;
-      color: white;
-      font-size: 14px;
-      font-weight: 800;
-      cursor: help;
+    /* Clean Circle with Dot Hotspots */
+    .hotspot-container {
+      position: relative;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
-      position: relative;
     }
-    .hotspot-info:hover {
-      background: #7c3aed;
+    .hotspot-circle {
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      transition: transform 0.2s, background-color 0.2s;
+      border: 2px solid;
+    }
+    .hotspot-circle:hover {
       transform: scale(1.1);
     }
+    .hotspot-circle-scene {
+      background: rgba(219, 39, 119, 0.3); /* pink-600 */
+      border-color: rgba(244, 114, 182, 0.8); /* pink-400 */
+    }
+    .hotspot-circle-info {
+      background: rgba(79, 70, 229, 0.3); /* indigo-600 */
+      border-color: rgba(129, 140, 248, 0.8); /* indigo-400 */
+    }
+    .hotspot-dot {
+      border-radius: 50%;
+    }
+    .hotspot-dot-scene {
+      background: #f472b6;
+    }
+    .hotspot-dot-info {
+      background: #818cf8;
+    }
     
-    /* Popup descriptions on hover */
-    .hotspot-info .popover {
+    /* Popover Tooltip */
+    .hotspot-popover {
       position: absolute;
-      bottom: 40px;
+      bottom: calc(100% + 10px);
       left: 50%;
       transform: translateX(-50%) scale(0.95);
-      width: 220px;
+      width: 200px;
       background: rgba(15, 23, 42, 0.95);
       border: 1px solid rgba(255, 255, 255, 0.1);
-      padding: 12px;
+      padding: 10px;
       border-radius: 12px;
       box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
       opacity: 0;
       pointer-events: none;
       transition: all 0.2s;
-      text-align: left;
+      text-align: center;
+      z-index: 100;
     }
-    .hotspot-info:hover .popover {
+    .hotspot-container:hover .hotspot-popover {
       opacity: 1;
       transform: translateX(-50%) scale(1);
     }
     .popover-title {
       font-weight: bold;
-      font-size: 12px;
-      color: #a5b4fc;
-      margin-bottom: 4px;
+      font-size: 11px;
+      color: #f472b6;
+      margin-bottom: 2px;
     }
     .popover-desc {
-      font-size: 10px;
-      color: #94a3b8;
+      font-size: 9px;
+      color: #cbd5e1;
       line-height: 1.4;
     }
     
@@ -455,41 +456,61 @@ export async function GET(request: Request) {
           div.style.left = screenX + 'px';
           div.style.top = screenY + 'px';
           
-          if (hs.type === 'scene') {
-            const btn = document.createElement('button');
-            btn.className = 'hotspot-scene';
-            btn.textContent = hs.title;
-            btn.onclick = () => {
+          const size = hs.size || 40;
+          
+          const hsContainer = document.createElement('div');
+          hsContainer.className = 'hotspot-container';
+          
+          const circle = document.createElement('div');
+          circle.className = 'hotspot-circle ' + (hs.type === 'scene' ? 'hotspot-circle-scene' : 'hotspot-circle-info');
+          circle.style.width = size + 'px';
+          circle.style.height = size + 'px';
+          
+          const innerDot = document.createElement('div');
+          innerDot.className = 'hotspot-dot ' + (hs.type === 'scene' ? 'hotspot-dot-scene' : 'hotspot-dot-info');
+          const dotSize = Math.max(4, size * 0.3);
+          innerDot.style.width = dotSize + 'px';
+          innerDot.style.height = dotSize + 'px';
+          
+          circle.appendChild(innerDot);
+          hsContainer.appendChild(circle);
+          
+          // Add Popover Tooltip
+          const popover = document.createElement('div');
+          popover.className = 'hotspot-popover';
+          
+          const title = document.createElement('div');
+          title.className = 'popover-title';
+          title.textContent = hs.title;
+          popover.appendChild(title);
+          
+          if (hs.type === 'info' && hs.description) {
+            const desc = document.createElement('div');
+            desc.className = 'popover-desc';
+            desc.textContent = hs.description;
+            popover.appendChild(desc);
+          } else if (hs.type === 'scene') {
+            const desc = document.createElement('div');
+            desc.className = 'popover-desc';
+            desc.style.fontSize = '8px';
+            desc.style.color = '#818cf8';
+            desc.style.fontWeight = 'bold';
+            desc.textContent = 'ROOM PORTAL';
+            popover.appendChild(desc);
+          }
+          
+          hsContainer.appendChild(popover);
+          
+          circle.onclick = () => {
+            if (hs.type === 'scene') {
               const targetIdx = tourData.findIndex(p => p.id === hs.targetPanoramaId);
               if (targetIdx !== -1) {
                 loadRoom(targetIdx);
               }
-            };
-            div.appendChild(btn);
-          } else {
-            const btn = document.createElement('div');
-            btn.className = 'hotspot-info';
-            btn.textContent = 'i';
-            
-            const popover = document.createElement('div');
-            popover.className = 'popover';
-            
-            const title = document.createElement('div');
-            title.className = 'popover-title';
-            title.textContent = hs.title;
-            popover.appendChild(title);
-            
-            if (hs.description) {
-              const desc = document.createElement('div');
-              desc.className = 'popover-desc';
-              desc.textContent = hs.description;
-              popover.appendChild(desc);
             }
-            
-            btn.appendChild(popover);
-            div.appendChild(btn);
-          }
+          };
           
+          div.appendChild(hsContainer);
           overlay.appendChild(div);
         }
       });

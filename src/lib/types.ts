@@ -7,6 +7,7 @@ export interface Hotspot {
   title: string;
   description?: string;
   targetPanoramaId?: string; // Links to another room/panorama
+  size?: number; // Visual size in pixels
 }
 
 export interface Panorama {

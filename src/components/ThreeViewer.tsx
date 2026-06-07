@@ -247,39 +247,44 @@ export default function ThreeViewer({
       {projectedHotspots.map(({ hotspot, x, y, visible }) => {
         if (!visible) return null;
 
+        const size = hotspot.size || 40; // Fallback to 40px default size
+
         return (
           <div
             key={hotspot.id}
-            className="absolute transform -translate-x-1/2 -translate-y-1/2 z-30"
+            className="absolute transform -translate-x-1/2 -translate-y-1/2 z-30 group"
             style={{ left: `${x}px`, top: `${y}px` }}
           >
-            {hotspot.type === 'scene' ? (
-              // Scene navigation link
-              <button
-                onClick={() => onHotspotClick?.(hotspot)}
-                className="group flex items-center gap-2 bg-indigo-600/90 text-white text-xs font-semibold py-2 px-3 rounded-full shadow-lg shadow-indigo-500/30 border border-indigo-400/40 hover:bg-indigo-500 hover:scale-105 active:scale-95 transition-all duration-200"
-              >
-                <ArrowRight className="w-3.5 h-3.5 animate-pulse" />
-                <span>{hotspot.title}</span>
-              </button>
-            ) : (
-              // Info Point card popup
-              <div className="group relative flex items-center justify-center">
-                <button
-                  onClick={() => onHotspotClick?.(hotspot)}
-                  className="w-8 h-8 rounded-full bg-violet-600/90 text-white border border-violet-400/40 shadow-lg shadow-violet-500/30 flex items-center justify-center hover:bg-violet-500 hover:scale-110 transition-all duration-200 cursor-help"
-                >
-                  <Info className="w-4 h-4" />
-                </button>
-                {/* Popover Card */}
-                <div className="absolute bottom-10 scale-95 opacity-0 group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 pointer-events-none w-56 p-3 rounded-xl bg-slate-900/95 border border-white/10 text-white shadow-xl shadow-black/40 text-left">
-                  <h4 className="font-semibold text-xs text-indigo-300 mb-1">{hotspot.title}</h4>
-                  {hotspot.description && (
-                    <p className="text-[10px] text-slate-300 leading-relaxed">{hotspot.description}</p>
-                  )}
-                </div>
-              </div>
-            )}
+            {/* The Circle with Dot Inside */}
+            <div
+              onClick={() => onHotspotClick?.(hotspot)}
+              style={{ width: `${size}px`, height: `${size}px` }}
+              className={`rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 border-2 shadow-lg hover:scale-110 active:scale-95 ${
+                hotspot.type === 'scene'
+                  ? 'bg-pink-600/30 border-pink-400 shadow-pink-500/30'
+                  : 'bg-indigo-600/30 border-indigo-400 shadow-indigo-500/30'
+              }`}
+            >
+              {/* Inner Dot */}
+              <div
+                style={{ width: `${Math.max(4, size * 0.3)}px`, height: `${Math.max(4, size * 0.3)}px` }}
+                className={`rounded-full ${
+                  hotspot.type === 'scene' ? 'bg-pink-400' : 'bg-indigo-400'
+                }`}
+              />
+            </div>
+
+            {/* Hover Tooltip / Label */}
+            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 scale-95 opacity-0 group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 pointer-events-none w-48 p-2.5 rounded-xl bg-slate-900/95 border border-white/10 text-white shadow-xl shadow-black/40 text-center">
+              <h4 className="font-bold text-[11px] text-pink-400 mb-0.5">{hotspot.title}</h4>
+              {hotspot.type === 'scene' ? (
+                <span className="text-[8px] text-indigo-300 uppercase tracking-widest font-bold">Room Portal</span>
+              ) : (
+                hotspot.description && (
+                  <p className="text-[9px] text-slate-300 leading-normal mt-1">{hotspot.description}</p>
+                )
+              )}
+            </div>
           </div>
         );
       })}

@@ -49,6 +49,8 @@ function EditorPageContent() {
   // Room additions
   const [newRoomName, setNewRoomName] = useState<string>('');
   const [showAddRoom, setShowAddRoom] = useState<boolean>(false);
+  const [editingRoomId, setEditingRoomId] = useState<string | null>(null);
+  const [editingRoomName, setEditingRoomName] = useState<string>('');
 
   // Stitching process logs state
   const [isStitching, setIsStitching] = useState<boolean>(false);
@@ -135,6 +137,37 @@ function EditorPageContent() {
     }
   };
 
+  const handleRenameRoom = async (panoId: string, newName: string) => {
+    if (!project || !newName.trim()) return;
+
+    const updatedPanoramas = project.panoramas.map((p) => {
+      if (p.id === panoId) {
+        return { ...p, name: newName.trim(), updatedAt: new Date().toISOString() };
+      }
+      return p;
+    });
+
+    const updatedProject = {
+      ...project,
+      panoramas: updatedPanoramas
+    };
+
+    try {
+      const res = await fetch('/api/projects', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedProject)
+      });
+
+      if (res.ok) {
+        setProject(updatedProject);
+        setEditingRoomId(null);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const handleDeleteRoom = async (panoId: string) => {
     if (!project) return;
     if (project.panoramas.length <= 1) {
@@ -175,6 +208,7 @@ function EditorPageContent() {
     title: string;
     description?: string;
     targetPanoramaId?: string;
+    size: number;
   }) => {
     if (!project || !activePano || !pendingHotspotCoords) return;
 
@@ -186,7 +220,8 @@ function EditorPageContent() {
       yaw: pendingHotspotCoords.yaw,
       title: data.title,
       description: data.description,
-      targetPanoramaId: data.targetPanoramaId
+      targetPanoramaId: data.targetPanoramaId,
+      size: data.size
     };
 
     const updatedPanoramas = project.panoramas.map((p, idx) => {
@@ -479,39 +514,99 @@ function EditorPageContent() {
               )}
 
               <div className="space-y-2">
-                {project.panoramas.map((pano, index) => (
-                  <div
-                    key={pano.id}
-                    className={`p-3.5 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${
-                      index === activePanoIndex
-                        ? 'border-pink-500 bg-pink-600/10'
-                        : 'border-border-muted bg-foreground/3 hover:bg-foreground/5 hover:border-card-border'
-                    }`}
-                    onClick={() => setActivePanoIndex(index)}
-                  >
-                    <div>
-                      <span className="text-xs font-bold text-foreground block">{pano.name}</span>
-                      <span className="text-[9px] font-bold text-text-muted tracking-wider block mt-1 uppercase">
-                        {pano.status === 'completed' 
-                          ? '360 Active' 
-                          : pano.rawImages.length > 0 
-                          ? `${pano.rawImages.length} Captured` 
-                          : 'Empty Draft'}
-                      </span>
-                    </div>
-
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteRoom(pano.id);
-                      }}
-                      className="text-text-muted hover:text-rose-500 p-1.5 rounded-lg hover:bg-rose-500/10 transition-colors"
-                      title="Delete Room Folder"
+                {project.panoramas.map((pano, index) => {
+                  const isEditing = pano.id === editingRoomId;
+                  return (
+                    <div
+                      key={pano.id}
+                      className={`p-3.5 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${
+                        index === activePanoIndex
+                          ? 'border-pink-500 bg-pink-600/10'
+                          : 'border-border-muted bg-foreground/3 hover:bg-foreground/5 hover:border-card-border'
+                      }`}
+                      onClick={() => setActivePanoIndex(index)}
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                ))}
+                      <div className="flex-1 mr-2 text-left">
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            value={editingRoomName}
+                            onChange={(e) => setEditingRoomName(e.target.value)}
+                            className="w-full bg-background border border-pink-500/50 rounded-lg px-2.5 py-1 text-xs text-foreground focus:outline-none"
+                            onClick={(e) => e.stopPropagation()}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                handleRenameRoom(pano.id, editingRoomName);
+                              }
+                            }}
+                          />
+                        ) : (
+                          <>
+                            <span className="text-xs font-bold text-foreground block">{pano.name}</span>
+                            <span className="text-[9px] font-bold text-text-muted tracking-wider block mt-1 uppercase">
+                              {pano.status === 'completed' 
+                                ? '360 Active' 
+                                : pano.rawImages.length > 0 
+                                ? `${pano.rawImages.length} Captured` 
+                                : 'Empty Draft'}
+                            </span>
+                          </>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-1">
+                        {isEditing ? (
+                          <>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRenameRoom(pano.id, editingRoomName);
+                              }}
+                              className="text-emerald-500 hover:text-emerald-400 p-1.5 rounded-lg hover:bg-emerald-500/10 transition-colors"
+                              title="Save Name"
+                            >
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingRoomId(null);
+                              }}
+                              className="text-text-muted hover:text-foreground p-1.5 rounded-lg hover:bg-white/5 transition-colors"
+                              title="Cancel"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingRoomId(pano.id);
+                                setEditingRoomName(pano.name);
+                              }}
+                              className="text-text-muted hover:text-pink-500 p-1.5 rounded-lg hover:bg-pink-500/10 transition-colors"
+                              title="Rename Room"
+                            >
+                              <Edit className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteRoom(pano.id);
+                              }}
+                              className="text-text-muted hover:text-rose-500 p-1.5 rounded-lg hover:bg-rose-500/10 transition-colors"
+                              title="Delete Room Folder"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
