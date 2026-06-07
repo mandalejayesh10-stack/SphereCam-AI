@@ -1,0 +1,1328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SphereCam AI — Interactive 360° Virtual Tours</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0a0a0f;
+    --ink-soft: #3a3a4a;
+    --ink-muted: #7a7a9a;
+    --white: #ffffff;
+    --off-white: #f8f8fc;
+    --border: #e8e8f0;
+    --accent: #1a56ff;
+    --accent-2: #00c2a8;
+    --accent-warm: #ff6b35;
+    --gold: #f0b429;
+    --grad-1: linear-gradient(135deg, #1a56ff 0%, #00c2a8 100%);
+    --grad-hero: linear-gradient(160deg, #f0f4ff 0%, #e8f8f5 50%, #fff5f0 100%);
+    --grad-card: linear-gradient(145deg, #ffffff 0%, #f5f7ff 100%);
+    --shadow-sm: 0 2px 12px rgba(26,86,255,0.08);
+    --shadow-md: 0 8px 40px rgba(26,86,255,0.12);
+    --shadow-lg: 0 20px 80px rgba(26,86,255,0.16);
+    --radius: 20px;
+    --radius-lg: 32px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; font-size: 16px; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    color: var(--ink);
+    background: var(--white);
+    overflow-x: hidden;
+    line-height: 1.6;
+  }
+
+  /* ─── NAV ─── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 48px;
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    transition: box-shadow .3s;
+  }
+  nav.scrolled { box-shadow: var(--shadow-sm); }
+  .nav-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem; font-weight: 900;
+    background: var(--grad-1); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .nav-links { display: flex; gap: 32px; }
+  .nav-links a {
+    text-decoration: none; color: var(--ink-soft); font-weight: 500; font-size: .9rem;
+    transition: color .2s;
+  }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-cta {
+    background: var(--grad-1); color: #fff; border: none;
+    padding: 10px 24px; border-radius: 50px; font-size: .9rem; font-weight: 600;
+    cursor: pointer; transition: transform .2s, box-shadow .2s;
+    text-decoration: none;
+  }
+  .nav-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(26,86,255,.3); }
+
+  /* ─── SECTIONS ─── */
+  section { width: 100%; }
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 48px; }
+
+  /* ─── HERO ─── */
+  #hero {
+    min-height: 100vh;
+    background: var(--grad-hero);
+    display: flex; align-items: center;
+    padding-top: 90px;
+    position: relative; overflow: hidden;
+  }
+  .hero-orb {
+    position: absolute; border-radius: 50%; filter: blur(80px); opacity: .35;
+    pointer-events: none;
+  }
+  .hero-orb-1 { width: 600px; height: 600px; background: #1a56ff; top: -100px; right: -150px; }
+  .hero-orb-2 { width: 400px; height: 400px; background: #00c2a8; bottom: -50px; left: -100px; }
+  .hero-orb-3 { width: 300px; height: 300px; background: #ff6b35; top: 50%; right: 20%; opacity: .18; }
+
+  .hero-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
+  .hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(26,86,255,.08); border: 1px solid rgba(26,86,255,.2);
+    color: var(--accent); font-size: .8rem; font-weight: 600; letter-spacing: .06em;
+    padding: 6px 16px; border-radius: 50px; margin-bottom: 24px;
+    text-transform: uppercase;
+  }
+  .hero-eyebrow span { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.5)} }
+
+  .hero-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.4rem, 4vw, 3.8rem);
+    font-weight: 900; line-height: 1.12; margin-bottom: 24px;
+    color: var(--ink);
+  }
+  .hero-title .highlight {
+    background: var(--grad-1); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero-sub {
+    font-size: 1.1rem; color: var(--ink-soft); line-height: 1.7;
+    margin-bottom: 40px; max-width: 480px;
+  }
+  .hero-btns { display: flex; gap: 16px; flex-wrap: wrap; }
+  .btn-primary {
+    background: var(--grad-1); color: #fff;
+    padding: 15px 32px; border-radius: 50px; font-size: 1rem; font-weight: 600;
+    text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+    transition: transform .2s, box-shadow .2s;
+  }
+  .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(26,86,255,.35); }
+  .btn-secondary {
+    background: white; color: var(--ink);
+    padding: 15px 32px; border-radius: 50px; font-size: 1rem; font-weight: 600;
+    text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+    border: 2px solid var(--border);
+    transition: transform .2s, box-shadow .2s, border-color .2s;
+  }
+  .btn-secondary:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: var(--accent); }
+
+  .hero-visual {
+    position: relative; display: flex; align-items: center; justify-content: center;
+  }
+  .hero-phone {
+    width: 280px; border-radius: 40px;
+    box-shadow: 0 40px 100px rgba(0,0,0,.18), 0 0 0 1px rgba(255,255,255,.6);
+    overflow: hidden; position: relative; z-index: 2;
+    background: #fff; aspect-ratio: 9/18; animation: float 5s ease-in-out infinite;
+  }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-18px)} }
+  .hero-phone iframe { width: 100%; height: 100%; border: none; }
+  .hero-badge {
+    position: absolute; background: white; border-radius: var(--radius);
+    padding: 14px 18px; box-shadow: var(--shadow-md);
+    display: flex; align-items: center; gap: 10px; z-index: 3;
+    animation: float 5s ease-in-out infinite;
+  }
+  .hero-badge-1 { bottom: 60px; left: -20px; animation-delay: -.8s; }
+  .hero-badge-2 { top: 80px; right: -30px; animation-delay: -2s; }
+  .badge-icon { font-size: 1.4rem; }
+  .badge-label { font-size: .75rem; font-weight: 600; color: var(--ink-soft); }
+  .badge-value { font-size: .9rem; font-weight: 700; color: var(--ink); }
+
+  /* ─── SECTION HEADER ─── */
+  .section-tag {
+    display: inline-block;
+    background: rgba(26,86,255,.07); color: var(--accent);
+    font-size: .75rem; font-weight: 700; letter-spacing: .1em;
+    padding: 5px 14px; border-radius: 50px; text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 3.5vw, 3rem);
+    font-weight: 900; line-height: 1.2; color: var(--ink);
+    margin-bottom: 16px;
+  }
+  .section-sub {
+    font-size: 1.05rem; color: var(--ink-soft); max-width: 580px;
+    line-height: 1.7;
+  }
+  .section-header { margin-bottom: 64px; }
+  .center { text-align: center; }
+  .center .section-sub { margin: 0 auto; }
+
+  /* ─── WHY VIRTUAL TOURS ─── */
+  #why {
+    padding: 120px 0;
+    background: var(--white);
+  }
+  .why-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+  }
+  .why-card {
+    background: var(--grad-card);
+    border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 36px 28px;
+    position: relative; overflow: hidden;
+    transition: transform .3s, box-shadow .3s;
+  }
+  .why-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--grad-1); opacity: 0; transition: opacity .3s;
+  }
+  .why-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-md); }
+  .why-card:hover::before { opacity: 1; }
+  .why-icon {
+    width: 56px; height: 56px; border-radius: 16px;
+    background: rgba(26,86,255,.08);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem; margin-bottom: 20px;
+  }
+  .why-card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 10px; color: var(--ink); }
+  .why-card p { font-size: .92rem; color: var(--ink-soft); line-height: 1.6; }
+
+  /* ─── LIVE DEMO ─── */
+  #demo {
+    padding: 120px 0;
+    background: var(--off-white);
+  }
+  .demo-wrapper {
+    display: grid; grid-template-columns: 1fr 320px; gap: 48px; align-items: start;
+  }
+  .demo-frame-wrap {
+    border-radius: var(--radius-lg); overflow: hidden;
+    box-shadow: var(--shadow-lg); border: 1px solid var(--border);
+    aspect-ratio: 16/9; background: #000; position: relative;
+  }
+  .demo-frame-wrap iframe { width: 100%; height: 100%; border: none; }
+  .demo-side { display: flex; flex-direction: column; gap: 24px; }
+  .demo-qr {
+    background: white; border-radius: var(--radius);
+    padding: 28px; text-align: center;
+    box-shadow: var(--shadow-sm); border: 1px solid var(--border);
+  }
+  .qr-img {
+    width: 140px; height: 140px; margin: 0 auto 16px;
+    background: var(--ink); border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .qr-img svg { width: 100%; height: 100%; }
+  .demo-qr h4 { font-size: 1rem; font-weight: 700; margin-bottom: 6px; }
+  .demo-qr p { font-size: .85rem; color: var(--ink-soft); }
+  .demo-link {
+    background: var(--grad-1); color: white; text-decoration: none;
+    padding: 14px; border-radius: 14px; font-weight: 600; font-size: .95rem;
+    text-align: center; display: block; transition: transform .2s, box-shadow .2s;
+  }
+  .demo-link:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(26,86,255,.3); }
+  .demo-note {
+    background: white; border-radius: var(--radius);
+    padding: 20px; border: 1px solid var(--border);
+    font-size: .85rem; color: var(--ink-soft); line-height: 1.6;
+  }
+  .demo-note strong { color: var(--ink); }
+
+  /* ─── INDUSTRIES ─── */
+  #industries {
+    padding: 120px 0;
+    background: var(--white);
+  }
+  .industries-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+  }
+  .industry-card {
+    position: relative; border-radius: var(--radius);
+    padding: 32px 24px; overflow: hidden;
+    border: 1.5px solid var(--border); cursor: default;
+    transition: transform .3s, box-shadow .3s, border-color .3s;
+    background: white;
+  }
+  .industry-card:hover {
+    transform: translateY(-4px); box-shadow: var(--shadow-md);
+    border-color: var(--accent);
+  }
+  .industry-emoji { font-size: 2.4rem; margin-bottom: 16px; display: block; }
+  .industry-card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 8px; }
+  .industry-card p { font-size: .85rem; color: var(--ink-soft); }
+  .industry-card .industry-badge {
+    position: absolute; top: 16px; right: 16px;
+    background: rgba(26,86,255,.08); color: var(--accent);
+    font-size: .7rem; font-weight: 700; padding: 4px 10px; border-radius: 50px;
+  }
+
+  /* ─── WHAT'S INCLUDED ─── */
+  #included {
+    padding: 120px 0;
+    background: linear-gradient(160deg, #0a0a1f 0%, #0d1a3a 50%, #0a0f25 100%);
+    color: white; position: relative; overflow: hidden;
+  }
+  #included::before {
+    content: ''; position: absolute; inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%231a56ff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+  #included .section-tag { background: rgba(255,255,255,.1); color: rgba(255,255,255,.8); }
+  #included .section-title { color: white; }
+  #included .section-sub { color: rgba(255,255,255,.65); }
+  .included-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+  }
+  .included-item {
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
+    border-radius: 16px; padding: 20px;
+    display: flex; align-items: flex-start; gap: 12px;
+    transition: background .3s;
+  }
+  .included-item:hover { background: rgba(255,255,255,.1); }
+  .included-check {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--grad-1); display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-size: .75rem; color: white; font-weight: 700;
+  }
+  .included-item span { font-size: .88rem; color: rgba(255,255,255,.85); font-weight: 500; line-height: 1.4; }
+
+  /* ─── PRICING ─── */
+  #pricing {
+    padding: 120px 0;
+    background: var(--off-white);
+  }
+  .pricing-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+  }
+  .price-card {
+    background: white; border-radius: var(--radius-lg);
+    padding: 36px 28px; border: 1.5px solid var(--border);
+    position: relative; transition: transform .3s, box-shadow .3s;
+    display: flex; flex-direction: column;
+  }
+  .price-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-md); }
+  .price-card.featured {
+    background: var(--ink); color: white; border-color: var(--ink);
+    box-shadow: var(--shadow-lg);
+  }
+  .price-tag-featured {
+    position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+    background: var(--grad-1); color: white; font-size: .72rem; font-weight: 700;
+    padding: 5px 16px; border-radius: 50px; letter-spacing: .08em; white-space: nowrap;
+  }
+  .price-icon { font-size: 2rem; margin-bottom: 16px; }
+  .price-name { font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
+  .price-desc { font-size: .82rem; color: var(--ink-muted); margin-bottom: 20px; }
+  .price-card.featured .price-desc { color: rgba(255,255,255,.55); }
+  .price-amount {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.4rem; font-weight: 900; color: var(--ink);
+    line-height: 1; margin-bottom: 4px;
+  }
+  .price-card.featured .price-amount { color: white; }
+  .price-suffix { font-size: .82rem; font-weight: 400; font-family: 'DM Sans', sans-serif; }
+  .price-note { font-size: .78rem; color: var(--ink-muted); margin-bottom: 28px; }
+  .price-card.featured .price-note { color: rgba(255,255,255,.45); }
+  .price-btn {
+    margin-top: auto;
+    display: block; text-align: center;
+    padding: 13px; border-radius: 12px; font-weight: 600; font-size: .9rem;
+    text-decoration: none; transition: transform .2s, box-shadow .2s;
+    background: var(--off-white); color: var(--ink); border: 1.5px solid var(--border);
+  }
+  .price-card.featured .price-btn {
+    background: var(--grad-1); color: white; border-color: transparent;
+  }
+  .price-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+
+  /* ─── HOW IT WORKS ─── */
+  #how {
+    padding: 120px 0;
+    background: var(--white);
+  }
+  .steps-row {
+    display: flex; gap: 0; position: relative;
+  }
+  .steps-row::before {
+    content: ''; position: absolute;
+    top: 40px; left: 80px; right: 80px; height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    z-index: 0;
+  }
+  .step {
+    flex: 1; text-align: center; position: relative; z-index: 1;
+  }
+  .step-num {
+    width: 80px; height: 80px; border-radius: 50%;
+    background: var(--grad-1); color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem; font-weight: 900; margin: 0 auto 20px;
+    box-shadow: 0 8px 24px rgba(26,86,255,.3);
+    font-family: 'Playfair Display', serif;
+    border: 4px solid white;
+  }
+  .step h4 { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+  .step p { font-size: .82rem; color: var(--ink-soft); max-width: 140px; margin: 0 auto; line-height: 1.5; }
+
+  /* ─── BEFORE VS AFTER ─── */
+  #compare {
+    padding: 120px 0;
+    background: var(--off-white);
+  }
+  .compare-grid {
+    display: grid; grid-template-columns: 1fr auto 1fr; gap: 32px; align-items: center;
+  }
+  .compare-col {
+    background: white; border-radius: var(--radius-lg);
+    padding: 40px 32px; border: 2px solid var(--border);
+    position: relative;
+  }
+  .compare-col.bad { border-color: #ff453a; }
+  .compare-col.good { border-color: var(--accent-2); background: linear-gradient(145deg, #f0fff9, white); }
+  .compare-col-tag {
+    position: absolute; top: -14px; left: 28px;
+    font-size: .75rem; font-weight: 700; padding: 5px 14px; border-radius: 50px;
+  }
+  .bad .compare-col-tag { background: #fff0ef; color: #ff453a; }
+  .good .compare-col-tag { background: #e0faf4; color: #00a887; }
+  .compare-col h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 20px; }
+  .compare-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+  .compare-list li {
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: .88rem; line-height: 1.5;
+  }
+  .compare-list li .ci { flex-shrink: 0; font-size: 1rem; margin-top: 1px; }
+  .vs-badge {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: var(--ink); color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 1rem; flex-shrink: 0;
+    font-family: 'Playfair Display', serif;
+    box-shadow: var(--shadow-md);
+  }
+
+  /* ─── BENEFITS ─── */
+  #benefits {
+    padding: 120px 0;
+    background: var(--white);
+  }
+  .benefits-grid {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px;
+  }
+  .benefit-card {
+    border-radius: var(--radius); padding: 28px 20px;
+    text-align: center; border: 1.5px solid var(--border);
+    transition: transform .3s, box-shadow .3s;
+    background: white;
+  }
+  .benefit-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); border-color: var(--accent); }
+  .benefit-emoji { font-size: 2.2rem; display: block; margin-bottom: 12px; }
+  .benefit-for { font-size: .7rem; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 6px; }
+  .benefit-card h3 { font-size: .92rem; font-weight: 700; margin-bottom: 8px; }
+  .benefit-card p { font-size: .8rem; color: var(--ink-soft); line-height: 1.5; }
+  .benefit-stat {
+    display: inline-block; margin-top: 12px;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem; font-weight: 900;
+    background: var(--grad-1); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ─── CONTACT ─── */
+  #contact {
+    padding: 120px 0;
+    background: linear-gradient(160deg, #f0f4ff 0%, #e8f8f5 60%, #fff5f0 100%);
+    text-align: center;
+  }
+  .contact-inner { max-width: 680px; margin: 0 auto; }
+  .contact-btns { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-top: 40px; }
+  .contact-btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 16px 32px; border-radius: 50px;
+    font-size: 1rem; font-weight: 600; text-decoration: none;
+    transition: transform .2s, box-shadow .2s;
+  }
+  .btn-wa { background: #25d366; color: white; }
+  .btn-wa:hover { transform: translateY(-3px); box-shadow: 0 10px 28px rgba(37,211,102,.35); }
+  .btn-call { background: white; color: var(--ink); border: 2px solid var(--border); }
+  .btn-call:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: var(--accent); }
+  .btn-email { background: var(--ink); color: white; }
+  .btn-email:hover { transform: translateY(-3px); box-shadow: 0 10px 28px rgba(10,10,15,.25); }
+
+  .contact-card {
+    background: white; border-radius: var(--radius-lg);
+    padding: 48px 40px; margin-top: 56px;
+    box-shadow: var(--shadow-md); border: 1px solid var(--border);
+  }
+  .contact-card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .cc-item { text-align: center; }
+  .cc-icon { font-size: 2rem; margin-bottom: 12px; }
+  .cc-label { font-size: .75rem; color: var(--ink-muted); text-transform: uppercase; letter-spacing: .08em; font-weight: 600; margin-bottom: 4px; }
+  .cc-value { font-size: .95rem; font-weight: 700; color: var(--ink); }
+
+  /* ─── FOOTER ─── */
+  footer {
+    background: var(--ink); color: rgba(255,255,255,.5);
+    text-align: center; padding: 32px;
+    font-size: .82rem;
+  }
+  footer strong { color: white; }
+
+  /* ─── SCROLL REVEAL ─── */
+  .reveal { opacity: 0; transform: translateY(32px); transition: opacity .7s ease, transform .7s ease; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  /* ─── MOBILE ─── */
+  @media (max-width: 900px) {
+    nav { padding: 16px 24px; }
+    .nav-links { display: none; }
+    .container { padding: 0 24px; }
+    .hero-inner { grid-template-columns: 1fr; text-align: center; gap: 48px; }
+    .hero-sub { margin: 0 auto 40px; }
+    .hero-btns { justify-content: center; }
+    .hero-visual { display: none; }
+    section { padding: 0; }
+    #hero { padding-top: 100px; padding-bottom: 80px; }
+    #why, #demo, #industries, #included, #pricing, #how, #compare, #benefits, #contact { padding: 80px 0; }
+    .why-grid, .industries-grid { grid-template-columns: 1fr 1fr; }
+    .included-grid { grid-template-columns: 1fr 1fr; }
+    .pricing-grid { grid-template-columns: 1fr; }
+    .steps-row { flex-direction: column; gap: 32px; }
+    .steps-row::before { display: none; }
+    .compare-grid { grid-template-columns: 1fr; }
+    .vs-badge { margin: 0 auto; }
+    .benefits-grid { grid-template-columns: 1fr 1fr; }
+    .demo-wrapper { grid-template-columns: 1fr; }
+    .contact-card-grid { grid-template-columns: 1fr; gap: 32px; }
+  }
+
+  @media (max-width: 560px) {
+    .why-grid, .industries-grid, .included-grid, .benefits-grid { grid-template-columns: 1fr; }
+    .hero-title { font-size: 2.1rem; }
+    .section-title { font-size: 1.8rem; }
+    .gmaps-main { grid-template-columns: 1fr !important; }
+    .gmaps-steps { grid-template-columns: 1fr !important; }
+  }
+
+  /* ─── DIVIDER ─── */
+  .divider {
+    height: 1px; background: var(--border); margin: 0 48px;
+  }
+
+  /* ─── GOOGLE MAPS SECTION ─── */
+  #googlemaps {
+    padding: 120px 0;
+    background: var(--white);
+    position: relative; overflow: hidden;
+  }
+  .gmaps-main {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center;
+    margin-bottom: 72px;
+  }
+  .gmaps-visual {
+    position: relative;
+  }
+  .gmaps-mockup {
+    background: white; border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg); border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .gmaps-topbar {
+    background: #f1f3f4; padding: 12px 16px;
+    display: flex; align-items: center; gap: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .gmaps-searchbar {
+    flex: 1; background: white; border-radius: 24px;
+    padding: 8px 16px; display: flex; align-items: center; gap: 8px;
+    box-shadow: 0 1px 6px rgba(0,0,0,.1); font-size: .82rem; color: #555;
+  }
+  .gmaps-search-icon { color: var(--accent); font-size: 1rem; }
+  .gmaps-body { padding: 0; }
+  .gmaps-listing {
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .gmaps-biz-name { font-size: 1.1rem; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+  .gmaps-stars { color: #f9ab00; font-size: .85rem; margin-bottom: 2px; }
+  .gmaps-meta { font-size: .75rem; color: var(--ink-muted); margin-bottom: 12px; }
+  .gmaps-photos {
+    display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 3px; border-radius: 10px; overflow: hidden;
+  }
+  .gmaps-photo {
+    aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem; font-weight: 700;
+  }
+  .gmaps-photo-main {
+    background: linear-gradient(135deg, #1a56ff22, #00c2a822);
+    grid-row: span 2; aspect-ratio: auto;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 8px; padding: 20px;
+    position: relative;
+  }
+  .see-inside-badge {
+    position: absolute; bottom: 12px; left: 12px;
+    background: rgba(0,0,0,.75); color: white;
+    font-size: .7rem; font-weight: 700; padding: 5px 10px; border-radius: 6px;
+    display: flex; align-items: center; gap: 5px; backdrop-filter: blur(4px);
+  }
+  .gmaps-photo-sm { background: #e8f0fe; }
+  .gmaps-photo-sm2 { background: #e6f4ea; }
+  .gmaps-photo-sm3 { background: #fce8e6; }
+  .gmaps-photo-sm4 { background: #fef7e0; }
+  .gmaps-highlight {
+    padding: 14px 20px;
+    background: linear-gradient(135deg, #e8f0fe, #f0fff9);
+    display: flex; align-items: center; gap: 10px;
+    font-size: .82rem; font-weight: 600; color: var(--accent);
+  }
+  .gmaps-badge-float {
+    position: absolute; top: -16px; right: -16px;
+    background: var(--grad-1); color: white;
+    width: 90px; height: 90px; border-radius: 50%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-size: .65rem; font-weight: 700; text-align: center; line-height: 1.3;
+    box-shadow: 0 8px 24px rgba(26,86,255,.4);
+    border: 3px solid white;
+  }
+  .gmaps-badge-float span { font-size: 1.5rem; }
+
+  .gmaps-content h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem; font-weight: 900; color: var(--ink);
+    margin-bottom: 16px; line-height: 1.3;
+  }
+  .gmaps-content p { font-size: .95rem; color: var(--ink-soft); line-height: 1.7; margin-bottom: 24px; }
+  .gmaps-pills { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 28px; }
+  .gmaps-pill {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(26,86,255,.07); border: 1px solid rgba(26,86,255,.15);
+    color: var(--accent); font-size: .8rem; font-weight: 600;
+    padding: 6px 14px; border-radius: 50px;
+  }
+
+  .gmaps-steps {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+  }
+  .gmaps-step {
+    background: var(--off-white); border-radius: var(--radius);
+    padding: 28px 22px; border: 1px solid var(--border);
+    position: relative; overflow: hidden;
+    transition: transform .3s, box-shadow .3s;
+  }
+  .gmaps-step:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+  .gmaps-step::after {
+    content: attr(data-num);
+    position: absolute; top: -10px; right: 12px;
+    font-family: 'Playfair Display', serif;
+    font-size: 5rem; font-weight: 900; color: rgba(26,86,255,.06);
+    line-height: 1; pointer-events: none;
+  }
+  .gmaps-step-icon { font-size: 1.6rem; margin-bottom: 14px; }
+  .gmaps-step h4 { font-size: .95rem; font-weight: 700; margin-bottom: 8px; }
+  .gmaps-step p { font-size: .82rem; color: var(--ink-soft); line-height: 1.5; }
+
+  .gmaps-addon {
+    margin-top: 56px;
+    background: linear-gradient(135deg, #0a0a1f 0%, #1a2a5e 100%);
+    border-radius: var(--radius-lg); padding: 48px;
+    display: grid; grid-template-columns: 1fr auto; gap: 32px; align-items: center;
+    color: white;
+  }
+  .gmaps-addon h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem; font-weight: 900; margin-bottom: 10px;
+  }
+  .gmaps-addon p { font-size: .9rem; color: rgba(255,255,255,.65); line-height: 1.6; }
+  .gmaps-addon-price {
+    text-align: center; flex-shrink: 0;
+  }
+  .addon-label { font-size: .7rem; font-weight: 700; color: rgba(255,255,255,.5); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 4px; }
+  .addon-amount {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.4rem; font-weight: 900; color: white; line-height: 1;
+  }
+  .addon-note { font-size: .75rem; color: rgba(255,255,255,.45); margin-top: 4px; }
+  .addon-btn {
+    display: block; margin-top: 16px;
+    background: var(--grad-1); color: white;
+    padding: 12px 24px; border-radius: 50px; font-weight: 700; font-size: .88rem;
+    text-decoration: none; text-align: center;
+    transition: transform .2s, box-shadow .2s;
+  }
+  .addon-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(26,86,255,.5); }
+  @media (max-width: 900px) {
+    .gmaps-addon { grid-template-columns: 1fr; }
+    .gmaps-addon-price { text-align: left; }
+    .gmaps-steps { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="navbar">
+  <div class="nav-logo">SphereCam AI</div>
+  <div class="nav-links">
+    <a href="#why">Benefits</a>
+    <a href="#demo">Demo</a>
+    <a href="#industries">Industries</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#googlemaps">Google Maps</a>
+    <a href="#contact">Contact</a>
+  </div>
+  <a class="nav-cta" href="https://sphere-cam-ai.vercel.app/" target="_blank">Visit Website →</a>
+</nav>
+
+<!-- SECTION 1: HERO -->
+<section id="hero">
+  <div class="hero-orb hero-orb-1"></div>
+  <div class="hero-orb hero-orb-2"></div>
+  <div class="hero-orb hero-orb-3"></div>
+  <div class="container">
+    <div class="hero-inner">
+      <div class="hero-content">
+        <div class="hero-eyebrow"><span></span> Next-Gen Virtual Tours</div>
+        <h1 class="hero-title">
+          Bring Your Business<br>Online With<br>
+          <span class="highlight">Interactive 360°<br>Virtual Tours</span>
+        </h1>
+        <p class="hero-sub">Allow customers to explore your property, school, hotel, gym, or business from anywhere before they visit. Immersive. Interactive. Instant.</p>
+        <div class="hero-btns">
+          <a href="#demo" class="btn-primary">🎯 View Live Demo</a>
+          <a href="https://sphere-cam-ai.vercel.app/" target="_blank" class="btn-secondary">🌐 Visit Website</a>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="hero-phone">
+          <iframe src="https://sphere-cam-ai.vercel.app/tour.html" title="SphereCam AI Demo" loading="lazy" allowfullscreen></iframe>
+        </div>
+        <div class="hero-badge hero-badge-1">
+          <div class="badge-icon">⭐</div>
+          <div>
+            <div class="badge-label">Client Rating</div>
+            <div class="badge-value">5.0 / 5.0</div>
+          </div>
+        </div>
+        <div class="hero-badge hero-badge-2">
+          <div class="badge-icon">🔁</div>
+          <div>
+            <div class="badge-label">View Mode</div>
+            <div class="badge-value">Full 360°</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 2: WHY VIRTUAL TOURS -->
+<section id="why">
+  <div class="container">
+    <div class="section-header center reveal">
+      <div class="section-tag">Why It Matters</div>
+      <h2 class="section-title">Why Virtual Tours?</h2>
+      <p class="section-sub">Virtual tours are the new standard for businesses that want to attract customers before they even step through the door.</p>
+    </div>
+    <div class="why-grid">
+      <div class="why-card reveal">
+        <div class="why-icon">🤝</div>
+        <h3>Increase Customer Trust</h3>
+        <p>Let customers see exactly what to expect. Transparency builds confidence and reduces drop-offs before arrival.</p>
+      </div>
+      <div class="why-card reveal">
+        <div class="why-icon">🏆</div>
+        <h3>Stand Out From Competitors</h3>
+        <p>Most businesses still use static photos. A 360° tour instantly sets you apart and signals premium quality.</p>
+      </div>
+      <div class="why-card reveal">
+        <div class="why-icon">🕐</div>
+        <h3>Available 24/7</h3>
+        <p>Your virtual tour works round the clock — even while you sleep, potential customers are exploring your space.</p>
+      </div>
+      <div class="why-card reveal">
+        <div class="why-icon">💡</div>
+        <h3>Better Customer Engagement</h3>
+        <p>Interactive content keeps visitors engaged 5–10× longer than static images or videos, leading to better recall.</p>
+      </div>
+      <div class="why-card reveal">
+        <div class="why-icon">📈</div>
+        <h3>Increase Inquiries & Bookings</h3>
+        <p>Customers who explore your space virtually are far more likely to take the next step — call, book, or visit.</p>
+      </div>
+      <div class="why-card reveal">
+        <div class="why-icon">🌍</div>
+        <h3>Showcase Facilities Remotely</h3>
+        <p>Reach customers from any city or country. Share your tour on WhatsApp, Instagram, or your website with one link.</p>
+      </div>
+      <div class="why-card reveal" style="border-color:rgba(26,86,255,.25);background:linear-gradient(145deg,#f0f4ff,#e8f8f5);">
+        <div class="why-icon" style="background:rgba(26,86,255,.12);">📍</div>
+        <h3>Appear on Google Maps</h3>
+        <p>Your interior tour can show up directly in Google Search & Maps — giving you a "See Inside" button that competitors simply don't have.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 3: LIVE DEMO -->
+<section id="demo">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-tag">Try It Now</div>
+      <h2 class="section-title">Experience a Live Demo</h2>
+      <p class="section-sub">This is exactly what your customers will see. Click, drag, and explore — it's fully interactive.</p>
+    </div>
+    <div class="demo-wrapper reveal">
+      <div class="demo-frame-wrap">
+        <iframe src="https://sphere-cam-ai.vercel.app/tour.html" title="SphereCam AI Live Tour" allowfullscreen loading="lazy"></iframe>
+      </div>
+      <div class="demo-side">
+        <div class="demo-qr">
+          <div class="qr-img">
+            <!-- QR code for https://sphere-cam-ai.vercel.app/tour.html -->
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="background:white;padding:8px;">
+              <rect width="200" height="200" fill="white"/>
+              <!-- Finder pattern TL -->
+              <rect x="10" y="10" width="56" height="56" fill="#0a0a0f" rx="4"/>
+              <rect x="18" y="18" width="40" height="40" fill="white" rx="2"/>
+              <rect x="26" y="26" width="24" height="24" fill="#0a0a0f" rx="2"/>
+              <!-- Finder pattern TR -->
+              <rect x="134" y="10" width="56" height="56" fill="#0a0a0f" rx="4"/>
+              <rect x="142" y="18" width="40" height="40" fill="white" rx="2"/>
+              <rect x="150" y="26" width="24" height="24" fill="#0a0a0f" rx="2"/>
+              <!-- Finder pattern BL -->
+              <rect x="10" y="134" width="56" height="56" fill="#0a0a0f" rx="4"/>
+              <rect x="18" y="142" width="40" height="40" fill="white" rx="2"/>
+              <rect x="26" y="150" width="24" height="24" fill="#0a0a0f" rx="2"/>
+              <!-- Data modules (stylised) -->
+              <rect x="80" y="10" width="8" height="8" fill="#0a0a0f" rx="1"/>
+              <rect x="96" y="10" width="8" height="8" fill="#0a0a0f" rx="1"/>
+              <rect x="112" y="10" width="8" height="8" fill="#0a0a0f" rx="1"/>
+              <rect x="80" y="26" width="8" height="8" fill="#0a0a0f" rx="1"/>
+              <rect x="104" y="26" width="8" height="8" fill="#0a0a0f" rx="1"/>
+              <rect x="80" y="42" width="8" height="8" fill="#0a0a0f" rx="1"/>
+              <rect x="96" y="42" width="8" height="8" fill="#0a0a0f" rx="1"/>
+              <rect x="112" y="42" width="8" height="8" fill="#0a0a0f" rx="1"/>
+              <rect x="10" y="80" width="8" height="8" fill="#0a0a0f" rx="1"/>
+              <rect x="26" y="80" width="8" height="8" fill="#0a0a0f" rx="1"/>
+              <rect x="42" y="80" width="8" height="8" fill="#0a0a0f" rx="1"/>
+              <rect x="58" y="80" width="8" height="8" fill="#0a0a0f" rx="1"/>
+              <rect x="80" y="80" width="8" height="8" fill="#1a56ff" rx="1"/>
+              <rect x="96" y="80" width="8" height="8" fill="#1a56ff" rx="1"/>
+              <rect x="112" y="80" width="8" height="8" fill="#1a56ff" rx="1"/>
+              <rect x="128" y="80" width="8" height="8" fill="#0a0a0f" rx="1"/>
+              <rect x="144" y="80" width="8" height="8" fill="#0a0a0f" rx="1"/>
+              <rect x="160" y="80" width="8" height="8" fill="#0a0a0f" rx="1"/>
+              <rect x="176" y="80" width="8" height="8" fill="#0a0a0f" rx="1"/>
+              <rect x="10" y="96" width="8" height="8" fill="#0a0a0f" rx="1"/>
+              <rect x="42" y="96" width="8" height="8" fill="#0a0a0f" rx="1"/>
+              <rect x="80" y="96" width="8" height="8" fill="#1a56ff" rx="1"/>
+              <rect x="104" y="96" width="8" height="8" fill="#1a56ff" rx="1"/>
+              <rect x="128" y="96" width="8" height="8" fill="#0a0a0f" rx="1"/>
+              <rect x="160" y="96" width="8" height="8" fill="#0a0a0f" rx="1"/>
+              <rect x="10" y="112" width="8" height="8" fill="#0a0a0f" rx="1"/>
+              <rect x="26" y="112" width="8" height="8" fill="#0a0a0f" rx="1"/>
+              <rect x="58" y="112" width="8" height="8" fill="#0a0a0f" rx="1"/>
+              <rect x="80" y="112" width="8" height="8" fill="#1a56ff" rx="1"/>
+              <rect x="96" y="112" width="8" height="8" fill="#1a56ff" rx="1"/>
+              <rect x="112" y="112" width="8" height="8" fill="#1a56ff" rx="1"/>
+              <rect x="144" y="112" width="8" height="8" fill="#0a0a0f" rx="1"/>
+              <rect x="176" y="112" width="8" height="8" fill="#0a0a0f" rx="1"/>
+              <rect x="80" y="134" width="8" height="8" fill="#0a0a0f" rx="1"/>
+              <rect x="96" y="134" width="8" height="8" fill="#0a0a0f" rx="1"/>
+              <rect x="112" y="134" width="8" height="8" fill="#0a0a0f" rx="1"/>
+              <rect x="128" y="134" width="8" height="8" fill="#0a0a0f" rx="1"/>
+              <rect x="80" y="150" width="8" height="8" fill="#0a0a0f" rx="1"/>
+              <rect x="112" y="150" width="8" height="8" fill="#0a0a0f" rx="1"/>
+              <rect x="144" y="150" width="8" height="8" fill="#0a0a0f" rx="1"/>
+              <rect x="160" y="150" width="8" height="8" fill="#0a0a0f" rx="1"/>
+              <rect x="176" y="150" width="8" height="8" fill="#0a0a0f" rx="1"/>
+              <rect x="80" y="166" width="8" height="8" fill="#0a0a0f" rx="1"/>
+              <rect x="96" y="166" width="8" height="8" fill="#0a0a0f" rx="1"/>
+              <rect x="128" y="166" width="8" height="8" fill="#0a0a0f" rx="1"/>
+              <rect x="160" y="166" width="8" height="8" fill="#0a0a0f" rx="1"/>
+              <rect x="80" y="182" width="8" height="8" fill="#0a0a0f" rx="1"/>
+              <rect x="112" y="182" width="8" height="8" fill="#0a0a0f" rx="1"/>
+              <rect x="144" y="182" width="8" height="8" fill="#0a0a0f" rx="1"/>
+              <rect x="176" y="182" width="8" height="8" fill="#0a0a0f" rx="1"/>
+            </svg>
+          </div>
+          <h4>Scan QR Code</h4>
+          <p>Point your phone camera at this code to open the live demo instantly</p>
+        </div>
+        <a class="demo-link" href="https://sphere-cam-ai.vercel.app/tour.html" target="_blank">🔗 Open Full Screen Demo</a>
+        <div class="demo-note">
+          <strong>💡 Pro Tip:</strong> Click and drag inside the tour to look around. Use the hotspots to navigate between rooms. Works perfectly on mobile, tablet, and desktop.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 4: INDUSTRIES -->
+<section id="industries">
+  <div class="container">
+    <div class="section-header center reveal">
+      <div class="section-tag">Who We Serve</div>
+      <h2 class="section-title">Industries We Work With</h2>
+      <p class="section-sub">From luxury hotels to school campuses — if you have a space worth showing, we make it shine online.</p>
+    </div>
+    <div class="industries-grid">
+      <div class="industry-card reveal">
+        <span class="industry-emoji">🏢</span>
+        <h3>Real Estate</h3>
+        <p>Let buyers explore flats, villas & plots before site visits. Close deals faster.</p>
+        <span class="industry-badge">Popular</span>
+      </div>
+      <div class="industry-card reveal">
+        <span class="industry-emoji">🏫</span>
+        <h3>Schools</h3>
+        <p>Showcase classrooms, playgrounds & labs to parents making admission decisions.</p>
+      </div>
+      <div class="industry-card reveal">
+        <span class="industry-emoji">🎓</span>
+        <h3>Colleges & Universities</h3>
+        <p>Virtual campus tours for outstation students, international admissions & open days.</p>
+        <span class="industry-badge">High Demand</span>
+      </div>
+      <div class="industry-card reveal">
+        <span class="industry-emoji">🏨</span>
+        <h3>Hotels</h3>
+        <p>Show rooms, lobbies, restaurants & amenities to drive direct bookings.</p>
+      </div>
+      <div class="industry-card reveal">
+        <span class="industry-emoji">🍽️</span>
+        <h3>Restaurants</h3>
+        <p>Showcase ambience, seating & interiors to attract dine-in customers.</p>
+      </div>
+      <div class="industry-card reveal">
+        <span class="industry-emoji">💪</span>
+        <h3>Gyms & Fitness</h3>
+        <p>Display equipment, zones & facilities to convert prospects into members.</p>
+      </div>
+      <div class="industry-card reveal">
+        <span class="industry-emoji">🎊</span>
+        <h3>Banquet Halls</h3>
+        <p>Let clients preview the venue before booking for weddings and events.</p>
+      </div>
+      <div class="industry-card reveal">
+        <span class="industry-emoji">🏥</span>
+        <h3>Hospitals & Clinics</h3>
+        <p>Build patient confidence by showcasing wards, facilities & modern equipment.</p>
+      </div>
+      <div class="industry-card reveal">
+        <span class="industry-emoji">🏙️</span>
+        <h3>Corporate Offices</h3>
+        <p>Attract talent & clients with a virtual walkthrough of your workspace culture.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 5: WHAT'S INCLUDED -->
+<section id="included">
+  <div class="container">
+    <div class="section-header center reveal">
+      <div class="section-tag">Everything Included</div>
+      <h2 class="section-title">What You Get With Every Tour</h2>
+      <p class="section-sub">No hidden extras. Every SphereCam AI project comes fully loaded — ready to share, embed, and impress.</p>
+    </div>
+    <div class="included-grid reveal">
+      <div class="included-item"><div class="included-check">✓</div><span>Professional 360° Tour</span></div>
+      <div class="included-item"><div class="included-check">✓</div><span>QR Code for Easy Sharing</span></div>
+      <div class="included-item"><div class="included-check">✓</div><span>WhatsApp Business Integration</span></div>
+      <div class="included-item"><div class="included-check">✓</div><span>Website Integration</span></div>
+      <div class="included-item"><div class="included-check">✓</div><span>YouTube Video Embedding</span></div>
+      <div class="included-item"><div class="included-check">✓</div><span>Unlimited Hotspots</span></div>
+      <div class="included-item"><div class="included-check">✓</div><span>Mobile Support</span></div>
+      <div class="included-item"><div class="included-check">✓</div><span>Desktop Support</span></div>
+      <div class="included-item"><div class="included-check">✓</div><span>Live Shareable Link</span></div>
+      <div class="included-item"><div class="included-check">✓</div><span>Interactive Navigation</span></div>
+      <div class="included-item"><div class="included-check">✓</div><span>Zoom In & Zoom Out</span></div>
+      <div class="included-item"><div class="included-check">✓</div><span>Multi-Room Tour</span></div>
+      <div class="included-item" style="background:rgba(26,86,255,.12);border-color:rgba(26,86,255,.3);"><div class="included-check" style="background:#f0b429;">★</div><span style="color:white;font-weight:600;">Google Maps Integration <span style="opacity:.6;font-size:.75rem;">(Add-on)</span></span></div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 6: PRICING -->
+<section id="pricing">
+  <div class="container">
+    <div class="section-header center reveal">
+      <div class="section-tag">Transparent Pricing</div>
+      <h2 class="section-title">Simple, Clear Pricing</h2>
+      <p class="section-sub">No surprises. Choose the package that fits your business — or reach out for a custom quote.</p>
+    </div>
+    <div class="pricing-grid reveal">
+      <div class="price-card">
+        <div class="price-icon">🏠</div>
+        <div class="price-name">Real Estate Tour</div>
+        <div class="price-desc">3–8 Rooms</div>
+        <div class="price-amount">₹7,999</div>
+        <div class="price-note">One-time delivery</div>
+        <a href="#contact" class="price-btn">Get Started</a>
+      </div>
+      <div class="price-card">
+        <div class="price-icon">🏘️</div>
+        <div class="price-name">Large Property</div>
+        <div class="price-desc">8–10 Rooms</div>
+        <div class="price-amount">₹10,999</div>
+        <div class="price-note">One-time delivery</div>
+        <a href="#contact" class="price-btn">Get Started</a>
+      </div>
+      <div class="price-card">
+        <div class="price-icon">💪</div>
+        <div class="price-name">Gym Tour</div>
+        <div class="price-desc">Full facility coverage</div>
+        <div class="price-amount">₹8,999</div>
+        <div class="price-note">One-time delivery</div>
+        <a href="#contact" class="price-btn">Get Started</a>
+      </div>
+      <div class="price-card featured">
+        <div class="price-tag-featured">⭐ BEST VALUE</div>
+        <div class="price-icon">🎓</div>
+        <div class="price-name">Institute Tour</div>
+        <div class="price-desc">Schools, Colleges & Universities</div>
+        <div class="price-amount">₹15,999</div>
+        <div class="price-note">One-time delivery</div>
+        <a href="#contact" class="price-btn">Get Started</a>
+      </div>
+      <div class="price-card">
+        <div class="price-icon">🏨</div>
+        <div class="price-name">Hotel Tour</div>
+        <div class="price-desc">Rooms, lobby & amenities</div>
+        <div class="price-amount">₹8,000<span class="price-suffix">+</span></div>
+        <div class="price-note">Starting price — varies by size</div>
+        <a href="#contact" class="price-btn">Get a Quote</a>
+      </div>
+      <div class="price-card">
+        <div class="price-icon">✨</div>
+        <div class="price-name">Custom Project</div>
+        <div class="price-desc">Tailored to your needs</div>
+        <div class="price-amount" style="font-size:1.5rem;padding-top:6px;">Contact Us</div>
+        <div class="price-note">Let's discuss your requirements</div>
+        <a href="#contact" class="price-btn">Talk to Us</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 7: HOW IT WORKS -->
+<section id="how">
+  <div class="container">
+    <div class="section-header center reveal">
+      <div class="section-tag">The Process</div>
+      <h2 class="section-title">How It Works</h2>
+      <p class="section-sub">From first contact to live tour — a smooth, hassle-free process designed around you.</p>
+    </div>
+    <div class="steps-row reveal">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h4>Site Visit</h4>
+        <p>We visit your location at a time that suits you.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h4>360° Capture</h4>
+        <p>We photograph every room with professional 360° cameras.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h4>Tour Creation</h4>
+        <p>We build your interactive tour with hotspots, links & branding.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <h4>Review</h4>
+        <p>You review and approve. We fine-tune until it's perfect.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <h4>Delivery</h4>
+        <p>Your live tour link & QR code delivered, ready to share.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 8: BEFORE VS AFTER -->
+<section id="compare">
+  <div class="container">
+    <div class="section-header center reveal">
+      <div class="section-tag">The Difference</div>
+      <h2 class="section-title">Before vs. After</h2>
+      <p class="section-sub">See how a SphereCam AI virtual tour transforms the way customers experience your business.</p>
+    </div>
+    <div class="compare-grid reveal">
+      <div class="compare-col bad">
+        <div class="compare-col-tag">❌ Traditional Photos</div>
+        <h3>Static & Limited</h3>
+        <ul class="compare-list">
+          <li><span class="ci">📷</span><span>Flat, 2D images with no interactivity</span></li>
+          <li><span class="ci">😐</span><span>Customers scroll past quickly — low engagement</span></li>
+          <li><span class="ci">🔍</span><span>Difficult to show scale, depth, and layout</span></li>
+          <li><span class="ci">📞</span><span>Many site visits needed before a decision is made</span></li>
+          <li><span class="ci">🕐</span><span>Requires human availability to show around</span></li>
+          <li><span class="ci">😒</span><span>Feels generic — same as every competitor</span></li>
+          <li><span class="ci">💸</span><span>Lower conversion — customers stay uncertain</span></li>
+        </ul>
+      </div>
+      <div class="vs-badge">VS</div>
+      <div class="compare-col good">
+        <div class="compare-col-tag">✅ SphereCam AI Tour</div>
+        <h3>Immersive & Powerful</h3>
+        <ul class="compare-list">
+          <li><span class="ci">🔄</span><span>Full 360° interactive exploration from any device</span></li>
+          <li><span class="ci">🤩</span><span>Customers spend 5–10× more time exploring</span></li>
+          <li><span class="ci">🗺️</span><span>Complete spatial understanding of your property</span></li>
+          <li><span class="ci">✅</span><span>Customers arrive ready to decide — fewer wasted visits</span></li>
+          <li><span class="ci">🌙</span><span>Works 24/7 — showcases itself automatically</span></li>
+          <li><span class="ci">🚀</span><span>Premium, memorable — instantly differentiates you</span></li>
+          <li><span class="ci">📈</span><span>Higher trust → more inquiries → more revenue</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 9: CUSTOMER BENEFITS -->
+<section id="benefits">
+  <div class="container">
+    <div class="section-header center reveal">
+      <div class="section-tag">Real Results</div>
+      <h2 class="section-title">What Our Clients Gain</h2>
+      <p class="section-sub">A virtual tour doesn't just look great — it drives measurable results for your specific industry.</p>
+    </div>
+    <div class="benefits-grid reveal">
+      <div class="benefit-card">
+        <span class="benefit-emoji">🏫</span>
+        <div class="benefit-for">Schools</div>
+        <h3>More Admissions</h3>
+        <p>Parents choose schools they can see before visiting. Stand out during admission season.</p>
+        <span class="benefit-stat">+More<br>Admissions</span>
+      </div>
+      <div class="benefit-card">
+        <span class="benefit-emoji">💪</span>
+        <div class="benefit-for">Gyms</div>
+        <h3>More Memberships</h3>
+        <p>Show off equipment, zones & energy. Convert Instagram visitors into paying members.</p>
+        <span class="benefit-stat">+More<br>Members</span>
+      </div>
+      <div class="benefit-card">
+        <span class="benefit-emoji">🏨</span>
+        <div class="benefit-for">Hotels</div>
+        <h3>More Bookings</h3>
+        <p>Travellers book confidently when they can explore rooms and amenities in advance.</p>
+        <span class="benefit-stat">+More<br>Bookings</span>
+      </div>
+      <div class="benefit-card">
+        <span class="benefit-emoji">🏢</span>
+        <div class="benefit-for">Real Estate</div>
+        <h3>More Inquiries</h3>
+        <p>Buyers and renters reach out faster when they can virtually walk through the property first.</p>
+        <span class="benefit-stat">+More<br>Inquiries</span>
+      </div>
+      <div class="benefit-card">
+        <span class="benefit-emoji">🍽️</span>
+        <div class="benefit-for">Restaurants</div>
+        <h3>More Visitors</h3>
+        <p>A beautiful ambience tour makes dining decisions easy — customers come because they already love it.</p>
+        <span class="benefit-stat">+More<br>Footfall</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 10: GOOGLE MAPS INTEGRATION -->
+<section id="googlemaps">
+  <div class="container">
+    <div class="section-header center reveal">
+      <div class="section-tag">Bonus Visibility</div>
+      <h2 class="section-title">Get Found On Google Maps Too</h2>
+      <p class="section-sub">Your 360° tour doesn't just live on your website — it can appear right inside Google Search and Google Maps when people look up your business.</p>
+    </div>
+
+    <div class="gmaps-main reveal">
+      <!-- Google Maps Mockup -->
+      <div class="gmaps-visual">
+        <div class="gmaps-mockup">
+          <div class="gmaps-topbar">
+            <div class="gmaps-searchbar">
+              <span class="gmaps-search-icon">🔍</span>
+              ABC Gym Nagpur
+            </div>
+          </div>
+          <div class="gmaps-body">
+            <div class="gmaps-listing">
+              <div class="gmaps-biz-name">ABC Gym Nagpur</div>
+              <div class="gmaps-stars">★★★★★ <span style="color:var(--ink-soft);">4.9 (128 reviews)</span></div>
+              <div class="gmaps-meta">Gym · Open now · Dharampeth, Nagpur</div>
+              <div class="gmaps-photos">
+                <div class="gmaps-photo gmaps-photo-main">
+                  <div style="font-size:2.2rem;">🔄</div>
+                  <div style="font-size:.75rem;font-weight:700;color:var(--accent);text-align:center;">360° Interactive<br>Interior View</div>
+                  <div class="see-inside-badge">👁️ See Inside</div>
+                </div>
+                <div class="gmaps-photo gmaps-photo-sm" style="display:flex;align-items:center;justify-content:center;">🏋️</div>
+                <div class="gmaps-photo gmaps-photo-sm2" style="display:flex;align-items:center;justify-content:center;">🚴</div>
+                <div class="gmaps-photo gmaps-photo-sm3" style="display:flex;align-items:center;justify-content:center;">🥊</div>
+                <div class="gmaps-photo gmaps-photo-sm4" style="display:flex;align-items:center;justify-content:center;">🏊</div>
+              </div>
+            </div>
+            <div class="gmaps-highlight">
+              <span>🗺️</span> 360° virtual walkthrough available — explore before you visit
+            </div>
+          </div>
+        </div>
+        <div class="gmaps-badge-float">
+          <span>📍</span>
+          Appears on<br>Google Maps
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div class="gmaps-content">
+        <h3>Your Business Interior — Right Inside Google Search</h3>
+        <p>When someone searches your business name on Google, they now see a <strong>"See Inside"</strong> button alongside your listing. One click and they're exploring your space in full 360° — without ever leaving Google. This is the same technology used by 5-star hotels, top restaurants, and premium gyms worldwide.</p>
+        <div class="gmaps-pills">
+          <div class="gmaps-pill">📍 Google Maps listing</div>
+          <div class="gmaps-pill">🔍 Google Search panel</div>
+          <div class="gmaps-pill">📱 Works on mobile</div>
+          <div class="gmaps-pill">🌐 Works on desktop</div>
+          <div class="gmaps-pill">🕐 Live 24/7</div>
+          <div class="gmaps-pill">⭐ Boosts credibility</div>
+        </div>
+        <p style="font-size:.85rem;color:var(--ink-muted);">We use the same 360° photos captured during your tour shoot — no extra site visit needed. We handle the upload and publishing directly to your Google Business Profile.</p>
+      </div>
+    </div>
+
+    <!-- How It Works -->
+    <div class="gmaps-steps reveal">
+      <div class="gmaps-step" data-num="1">
+        <div class="gmaps-step-icon">📸</div>
+        <h4>Same Photos, Zero Extra Effort</h4>
+        <p>We use the 360° images already captured during your SphereCam AI tour. No second visit, no extra equipment.</p>
+      </div>
+      <div class="gmaps-step" data-num="2">
+        <div class="gmaps-step-icon">✅</div>
+        <h4>We Publish To Your Profile</h4>
+        <p>We upload the equirectangular photos directly to your verified Google Business Profile. Google automatically displays them as interactive spheres.</p>
+      </div>
+      <div class="gmaps-step" data-num="3">
+        <div class="gmaps-step-icon">🌟</div>
+        <h4>Appear On Google Maps</h4>
+        <p>Your business listing now features a "See Inside" walkthrough — visible to every customer who searches for you on Google.</p>
+      </div>
+    </div>
+
+    <!-- Add-on Pricing Banner -->
+    <div class="gmaps-addon reveal">
+      <div>
+        <h3>🗺️ Add Google Maps Integration to Any Tour</h3>
+        <p>Already getting a SphereCam AI virtual tour? Add Google Maps publishing as a simple upgrade. Same shoot, same content — maximum visibility across every platform where your customers search.</p>
+      </div>
+      <div class="gmaps-addon-price">
+        <div class="addon-label">Add-On Price</div>
+        <div class="addon-amount">₹1,999</div>
+        <div class="addon-note">One-time. No recurring fees.</div>
+        <a href="#contact" class="addon-btn">Add to My Tour →</a>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- SECTION 11: CONTACT -->
+<section id="contact">
+  <div class="container">
+    <div class="contact-inner">
+      <div class="reveal">
+        <div class="section-tag">Let's Connect</div>
+        <h2 class="section-title">Ready To Showcase Your Business In 360°?</h2>
+        <p class="section-sub">Get in touch today. We'll understand your space, share a custom quote, and get your tour live within days.</p>
+      </div>
+      <div class="contact-btns reveal">
+        <a href="https://wa.me/919999999999?text=Hi%2C%20I'm%20interested%20in%20a%20360°%20Virtual%20Tour%20for%20my%20business." class="contact-btn btn-wa" target="_blank">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          WhatsApp Us
+        </a>
+        <a href="tel:+919999999999" class="contact-btn btn-call">
+          📞 Call Us
+        </a>
+        <a href="mailto:hello@spherecam.ai" class="contact-btn btn-email">
+          ✉️ Email Us
+        </a>
+      </div>
+      <div class="contact-card reveal">
+        <div class="contact-card-grid">
+          <div class="cc-item">
+            <div class="cc-icon">📍</div>
+            <div class="cc-label">Location</div>
+            <div class="cc-value">Pune, Maharashtra</div>
+          </div>
+          <div class="cc-item">
+            <div class="cc-icon">⚡</div>
+            <div class="cc-label">Turnaround</div>
+            <div class="cc-value">3–7 Business Days</div>
+          </div>
+          <div class="cc-item">
+            <div class="cc-icon">🌐</div>
+            <div class="cc-label">Website</div>
+            <div class="cc-value"><a href="https://sphere-cam-ai.vercel.app/" target="_blank" style="color:var(--accent);text-decoration:none;">sphere-cam-ai.vercel.app</a></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <strong>SphereCam AI</strong> &nbsp;·&nbsp; Immersive 360° Virtual Tours &nbsp;·&nbsp; <a href="https://sphere-cam-ai.vercel.app/" target="_blank" style="color:rgba(255,255,255,.6);text-decoration:none;">sphere-cam-ai.vercel.app</a>
+</footer>
+
+<script>
+  // Scroll-based reveal
+  const revealEls = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        // Stagger siblings
+        const siblings = [...e.target.parentElement.querySelectorAll('.reveal')];
+        const idx = siblings.indexOf(e.target);
+        setTimeout(() => { e.target.classList.add('visible'); }, idx * 80);
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  revealEls.forEach(el => io.observe(el));
+
+  // Navbar scroll effect
+  window.addEventListener('scroll', () => {
+    document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 40);
+  });
+</script>
+</body>
+</html>
