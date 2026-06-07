@@ -370,6 +370,8 @@ export async function GET(request: Request) {
       animate();
     }
     
+    let hotspotElements = [];
+    
     function loadRoom(index) {
       activePanoIndex = index;
       const room = tourData[index];
@@ -389,72 +391,17 @@ export async function GET(request: Request) {
         sphereMaterial.map = texture;
         sphereMaterial.needsUpdate = true;
       });
-      
-      // Reset camera
-      camera.position.set(0, 0, 0.1);
-      controls.update();
-    }
-    
-    function renderRoomsList() {
-      roomsList.innerHTML = '';
-      tourData.forEach((room, idx) => {
-        const div = document.createElement('div');
-        div.className = 'room-item';
-        if (idx === activePanoIndex) div.className += ' active';
-        div.textContent = room.name;
-        div.onclick = () => loadRoom(idx);
-        roomsList.appendChild(div);
-      });
-    }
-    
-    function animate() {
-      requestAnimationFrame(animate);
-      
-      if (controls) controls.update();
-      if (renderer && scene && camera) {
-        renderer.render(scene, camera);
-        
-        // Project spatial Hotspots
-        renderHotspots();
-      }
-    }
-    
-    function renderHotspots() {
+
+      // Clear existing hotspots
       overlay.innerHTML = '';
-      const room = tourData[activePanoIndex];
-      if (!room || !room.hotspots) return;
-      
-      const width = container.clientWidth;
-      const height = container.clientHeight;
-      
-      room.hotspots.forEach((hs) => {
-        // Convert yaw/pitch back to 3D Cartesian coordinates
-        const radius = 10;
-        const pitchRad = (hs.pitch * Math.PI) / 180;
-        const yawRad = (hs.yaw * Math.PI) / 180;
-        
-        const x = radius * Math.cos(pitchRad) * Math.sin(yawRad);
-        const y = radius * Math.sin(pitchRad);
-        const z = radius * Math.cos(pitchRad) * Math.cos(yawRad);
-        
-        const hsVector = new THREE.Vector3(x, y, z);
-        
-        // Dot check (ensure it is in front of camera lens)
-        const tempCamera = camera.clone();
-        const heading = new THREE.Vector3(0, 0, -1).applyQuaternion(tempCamera.quaternion);
-        const toHotspot = hsVector.clone().normalize();
-        const dot = heading.dot(toHotspot);
-        
-        if (dot > 0.3) {
-          hsVector.project(camera);
-          
-          const screenX = (hsVector.x * 0.5 + 0.5) * width;
-          const screenY = (-(hsVector.y * 0.5) + 0.5) * height;
-          
+      hotspotElements = [];
+
+      // Create new hotspots once
+      if (room.hotspots && room.hotspots.length > 0) {
+        room.hotspots.forEach((hs) => {
           const div = document.createElement('div');
           div.className = 'hotspot';
-          div.style.left = screenX + 'px';
-          div.style.top = screenY + 'px';
+          div.style.display = 'none'; // hidden until projected
           
           const size = hs.size || 40;
           
@@ -512,6 +459,78 @@ export async function GET(request: Request) {
           
           div.appendChild(hsContainer);
           overlay.appendChild(div);
+
+          hotspotElements.push({
+            element: div,
+            hs: hs
+          });
+        });
+      }
+      
+      // Reset camera
+      camera.position.set(0, 0, 0.1);
+      controls.update();
+    }
+    
+    function renderRoomsList() {
+      roomsList.innerHTML = '';
+      tourData.forEach((room, idx) => {
+        const div = document.createElement('div');
+        div.className = 'room-item';
+        if (idx === activePanoIndex) div.className += ' active';
+        div.textContent = room.name;
+        div.onclick = () => loadRoom(idx);
+        roomsList.appendChild(div);
+      });
+    }
+    
+    function animate() {
+      requestAnimationFrame(animate);
+      
+      if (controls) controls.update();
+      if (renderer && scene && camera) {
+        renderer.render(scene, camera);
+        
+        // Project spatial Hotspots dynamically
+        updateHotspots();
+      }
+    }
+    
+    function updateHotspots() {
+      if (hotspotElements.length === 0) return;
+
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+      
+      hotspotElements.forEach(({ element, hs }) => {
+        // Convert yaw/pitch back to 3D Cartesian coordinates
+        const radius = 10;
+        const pitchRad = (hs.pitch * Math.PI) / 180;
+        const yawRad = (hs.yaw * Math.PI) / 180;
+        
+        const x = radius * Math.cos(pitchRad) * Math.sin(yawRad);
+        const y = radius * Math.sin(pitchRad);
+        const z = radius * Math.cos(pitchRad) * Math.cos(yawRad);
+        
+        const hsVector = new THREE.Vector3(x, y, z);
+        
+        // Dot check (ensure it is in front of camera lens)
+        const tempCamera = camera.clone();
+        const heading = new THREE.Vector3(0, 0, -1).applyQuaternion(tempCamera.quaternion);
+        const toHotspot = hsVector.clone().normalize();
+        const dot = heading.dot(toHotspot);
+        
+        if (dot > 0.3) {
+          hsVector.project(camera);
+          
+          const screenX = (hsVector.x * 0.5 + 0.5) * width;
+          const screenY = (-(hsVector.y * 0.5) + 0.5) * height;
+          
+          element.style.left = screenX + 'px';
+          element.style.top = screenY + 'px';
+          element.style.display = 'block';
+        } else {
+          element.style.display = 'none';
         }
       });
     }
