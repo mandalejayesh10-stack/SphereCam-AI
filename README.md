@@ -5,6 +5,7 @@
 SphereCam AI is a venture-scale spatial SaaS platform enabling real estate agents, architects, builders, hospitality venues, and photographers to generate high-fidelity 360° equirectangular panoramas and interactive tours without the need for expensive professional 360° cameras, specialized hardware, or proprietary apps.
 
 🔗 **Live Production Deployment**: [https://sphere-cam-ai.vercel.app/](https://sphere-cam-ai.vercel.app/)
+🔗 **Live Interactive Tour Demo**: [https://sphere-cam-ai.vercel.app/tour.html](https://sphere-cam-ai.vercel.app/tour.html)
 
 ---
 
