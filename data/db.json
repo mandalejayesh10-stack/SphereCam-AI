@@ -190,5 +190,166 @@
         "updatedAt": "2026-06-01T09:40:07.585Z"
       }
     ]
+  },
+  {
+    "id": "kuula-7TpNR",
+    "name": "best1",
+    "description": "jss",
+    "isPublished": true,
+    "createdAt": "2026-06-07T13:45:47.457Z",
+    "updatedAt": "2026-06-07T13:45:47.457Z",
+    "panoramas": [
+      {
+        "id": "pano-LFpv8",
+        "projectId": "kuula-7TpNR",
+        "name": "Space LFpv8",
+        "rawImages": [
+          "frame_0.jpg"
+        ],
+        "stitchedUrl": "/uploads/kuula-7TpNR/pano-LFpv8.jpg",
+        "status": "completed",
+        "hotspots": [
+          {
+            "id": "hotspot-LFpv8-pano-LFp9f-0",
+            "panoramaId": "pano-LFpv8",
+            "type": "scene",
+            "pitch": 5.76,
+            "yaw": 62.95,
+            "title": "ChatGPT Image Jun 7, 2026, 12_43_49 PM",
+            "targetPanoramaId": "pano-LFp9f"
+          },
+          {
+            "id": "hotspot-LFpv8-pano-LFp9L-1",
+            "panoramaId": "pano-LFpv8",
+            "type": "scene",
+            "pitch": -6.74,
+            "yaw": 102.43,
+            "title": "ChatGPT dining  Image Jun 7, 2026, 12_59_16...",
+            "targetPanoramaId": "pano-LFp9L"
+          },
+          {
+            "id": "hotspot-LFpv8-pano-LFpv2-2",
+            "panoramaId": "pano-LFpv8",
+            "type": "scene",
+            "pitch": -21.38,
+            "yaw": -131.68,
+            "title": "ChatGPT galary Image Jun 7, 2026, 01_03_03...",
+            "targetPanoramaId": "pano-LFpv2"
+          },
+          {
+            "id": "hotspot-LFpv8-pano-LFpX7-3",
+            "panoramaId": "pano-LFpv8",
+            "type": "scene",
+            "pitch": -15.15,
+            "yaw": 30.99,
+            "title": "ChatGPT kitnchen Image Jun 7, 2026,...",
+            "targetPanoramaId": "pano-LFpX7"
+          }
+        ],
+        "createdAt": "2026-06-07T07:41:13.000Z",
+        "updatedAt": "2026-06-07T13:45:42.142Z"
+      },
+      {
+        "id": "pano-LFpv2",
+        "projectId": "kuula-7TpNR",
+        "name": "galary",
+        "rawImages": [
+          "frame_0.jpg"
+        ],
+        "stitchedUrl": "/uploads/kuula-7TpNR/pano-LFpv2.jpg",
+        "status": "completed",
+        "hotspots": [
+          {
+            "id": "hotspot-LFpv2-pano-LFpv8-0",
+            "panoramaId": "pano-LFpv2",
+            "type": "scene",
+            "pitch": -33.17,
+            "yaw": -79.3,
+            "title": "ChatGPT Image Jun 7, 2026, 12_46_14 PM",
+            "targetPanoramaId": "pano-LFpv8"
+          }
+        ],
+        "createdAt": "2026-06-07T07:41:43.000Z",
+        "updatedAt": "2026-06-07T13:45:43.443Z"
+      },
+      {
+        "id": "pano-LFp9L",
+        "projectId": "kuula-7TpNR",
+        "name": "dining",
+        "rawImages": [
+          "frame_0.jpg"
+        ],
+        "stitchedUrl": "/uploads/kuula-7TpNR/pano-LFp9L.jpg",
+        "status": "completed",
+        "hotspots": [
+          {
+            "id": "hotspot-LFp9L-pano-LFpv8-0",
+            "panoramaId": "pano-LFp9L",
+            "type": "scene",
+            "pitch": -22.88,
+            "yaw": -129.82,
+            "title": "ChatGPT Image Jun 7, 2026, 12_46_14 PM",
+            "targetPanoramaId": "pano-LFpv8"
+          }
+        ],
+        "createdAt": "2026-06-07T07:42:23.000Z",
+        "updatedAt": "2026-06-07T13:45:44.731Z"
+      },
+      {
+        "id": "pano-LFp9f",
+        "projectId": "kuula-7TpNR",
+        "name": "Space LFp9f",
+        "rawImages": [
+          "frame_0.jpg"
+        ],
+        "stitchedUrl": "/uploads/kuula-7TpNR/pano-LFp9f.jpg",
+        "status": "completed",
+        "hotspots": [
+          {
+            "id": "hotspot-LFp9f-pano-LFpv8-0",
+            "panoramaId": "pano-LFp9f",
+            "type": "scene",
+            "pitch": -24.21,
+            "yaw": -110.92,
+            "title": "ChatGPT Image Jun 7, 2026, 12_46_14 PM",
+            "targetPanoramaId": "pano-LFpv8"
+          }
+        ],
+        "createdAt": "2026-06-07T07:42:48.000Z",
+        "updatedAt": "2026-06-07T13:45:46.078Z"
+      },
+      {
+        "id": "pano-LFpX7",
+        "projectId": "kuula-7TpNR",
+        "name": "kitnchen",
+        "rawImages": [
+          "frame_0.jpg"
+        ],
+        "stitchedUrl": "/uploads/kuula-7TpNR/pano-LFpX7.jpg",
+        "status": "completed",
+        "hotspots": [
+          {
+            "id": "hotspot-LFpX7-pano-LFpv8-0",
+            "panoramaId": "pano-LFpX7",
+            "type": "scene",
+            "pitch": -23.21,
+            "yaw": -42.86,
+            "title": "ChatGPT Image Jun 7, 2026, 12_46_14 PM",
+            "targetPanoramaId": "pano-LFpv8"
+          },
+          {
+            "id": "hotspot-LFpX7-pano-LFp9L-1",
+            "panoramaId": "pano-LFpX7",
+            "type": "scene",
+            "pitch": -25.78,
+            "yaw": -114.25,
+            "title": "ChatGPT dining  Image Jun 7, 2026, 12_59_16...",
+            "targetPanoramaId": "pano-LFp9L"
+          }
+        ],
+        "createdAt": "2026-06-07T07:59:13.000Z",
+        "updatedAt": "2026-06-07T13:45:47.456Z"
+      }
+    ]
   }
 ]
