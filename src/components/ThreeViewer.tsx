@@ -118,9 +118,54 @@ export default function ThreeViewer({
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
-    controls.enableZoom = false; // Disable zoom to maintain immersive feeling
+    controls.enableZoom = false; // Disable standard zoom to use custom FOV zooming
     controls.rotateSpeed = -0.3; // Negative speed matches drag direction
     stateRef.current.controls = controls;
+
+    const handleWheel = (event: WheelEvent) => {
+      if (camera) {
+        camera.fov = Math.max(30, Math.min(95, camera.fov + event.deltaY * 0.05));
+        camera.updateProjectionMatrix();
+      }
+    };
+    renderer.domElement.addEventListener('wheel', handleWheel, { passive: true });
+
+    // Touch pinch-to-zoom for mobile screens
+    let touchStartDist = 0;
+    let initialFov = 75;
+
+    const handleTouchStart = (event: TouchEvent) => {
+      if (event.touches.length === 2) {
+        const touch1 = event.touches[0];
+        const touch2 = event.touches[1];
+        touchStartDist = Math.hypot(touch1.clientX - touch2.clientX, touch1.clientY - touch2.clientY);
+        if (camera) {
+          initialFov = camera.fov;
+        }
+      }
+    };
+
+    const handleTouchMove = (event: TouchEvent) => {
+      if (event.touches.length === 2 && touchStartDist > 0 && camera) {
+        const touch1 = event.touches[0];
+        const touch2 = event.touches[1];
+        const dist = Math.hypot(touch1.clientX - touch2.clientX, touch1.clientY - touch2.clientY);
+        if (dist > 0) {
+          const factor = touchStartDist / dist;
+          camera.fov = Math.max(30, Math.min(95, initialFov * factor));
+          camera.updateProjectionMatrix();
+        }
+      }
+    };
+
+    const handleTouchEnd = () => {
+      touchStartDist = 0;
+    };
+
+    renderer.domElement.addEventListener('touchstart', handleTouchStart, { passive: true });
+    renderer.domElement.addEventListener('touchmove', handleTouchMove, { passive: true });
+    renderer.domElement.addEventListener('touchend', handleTouchEnd, { passive: true });
+
 
     // 6. Raycasting for Hotspot Placement
     const raycaster = new THREE.Raycaster();
@@ -222,6 +267,10 @@ export default function ThreeViewer({
       window.removeEventListener('resize', handleResize);
       if (renderer && renderer.domElement) {
         renderer.domElement.removeEventListener('dblclick', handleCanvasDoubleClick);
+        renderer.domElement.removeEventListener('wheel', handleWheel);
+        renderer.domElement.removeEventListener('touchstart', handleTouchStart);
+        renderer.domElement.removeEventListener('touchmove', handleTouchMove);
+        renderer.domElement.removeEventListener('touchend', handleTouchEnd);
       }
       cancelAnimationFrame(animationFrameId);
       geometry.dispose();
@@ -229,6 +278,22 @@ export default function ThreeViewer({
       renderer.dispose();
     };
   }, [imageUrl, hotspots, isEditMode, onAddHotspot]);
+
+  const handleZoomIn = () => {
+    const camera = stateRef.current.camera;
+    if (camera) {
+      camera.fov = Math.max(30, camera.fov - 5);
+      camera.updateProjectionMatrix();
+    }
+  };
+
+  const handleZoomOut = () => {
+    const camera = stateRef.current.camera;
+    if (camera) {
+      camera.fov = Math.min(95, camera.fov + 5);
+      camera.updateProjectionMatrix();
+    }
+  };
 
   // Combine CSS adjustments on canvas style
   const filterStyle = {
@@ -288,6 +353,24 @@ export default function ThreeViewer({
           </div>
         );
       })}
+
+      {/* Zoom Controls Overlay */}
+      <div className="absolute bottom-4 right-4 z-40 flex flex-col gap-1.5">
+        <button
+          onClick={handleZoomIn}
+          className="w-8 h-8 rounded-lg bg-black/60 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-black/80 hover:scale-105 active:scale-95 transition-all text-base font-bold shadow-md cursor-pointer"
+          title="Zoom In"
+        >
+          +
+        </button>
+        <button
+          onClick={handleZoomOut}
+          className="w-8 h-8 rounded-lg bg-black/60 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-black/80 hover:scale-105 active:scale-95 transition-all text-base font-bold shadow-md cursor-pointer"
+          title="Zoom Out"
+        >
+          −
+        </button>
+      </div>
 
       {/* Editor Guide Badge */}
       {isEditMode && (

@@ -284,6 +284,42 @@ export async function GET(request: Request) {
       color: #6366f1;
       font-weight: 800;
     }
+    
+    /* Zoom controls styling */
+    #zoom-controls {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 25;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    #zoom-controls button {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: rgba(10, 10, 12, 0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: white;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      transition: all 0.2s;
+    }
+    #zoom-controls button:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: scale(1.05);
+    }
+    #zoom-controls button:active {
+      transform: scale(0.95);
+    }
   </style>
 </head>
 <body>
@@ -308,6 +344,12 @@ export async function GET(request: Request) {
     
     <!-- Branding Watermark -->
     <div id="branding-watermark">Powered by <span>SphereCam AI</span></div>
+    
+    <!-- Zoom buttons overlay -->
+    <div id="zoom-controls">
+      <button onclick="zoomIn()">+</button>
+      <button onclick="zoomOut()">−</button>
+    </div>
   </div>
 
   <script>
@@ -357,6 +399,44 @@ export async function GET(request: Request) {
       controls.dampingFactor = 0.05;
       controls.enableZoom = false;
       controls.rotateSpeed = -0.35;
+      
+      // Add wheel listener for zoom
+      canvas.addEventListener('wheel', (event) => {
+        camera.fov = Math.max(30, Math.min(95, camera.fov + event.deltaY * 0.05));
+        camera.updateProjectionMatrix();
+      }, { passive: true });
+
+      // Touch pinch-to-zoom for mobile screens
+      let touchStartDist = 0;
+      let initialFov = 75;
+
+      canvas.addEventListener('touchstart', (event) => {
+        if (event.touches.length === 2) {
+          const touch1 = event.touches[0];
+          const touch2 = event.touches[1];
+          touchStartDist = Math.hypot(touch1.clientX - touch2.clientX, touch1.clientY - touch2.clientY);
+          if (camera) {
+            initialFov = camera.fov;
+          }
+        }
+      }, { passive: true });
+
+      canvas.addEventListener('touchmove', (event) => {
+        if (event.touches.length === 2 && touchStartDist > 0 && camera) {
+          const touch1 = event.touches[0];
+          const touch2 = event.touches[1];
+          const dist = Math.hypot(touch1.clientX - touch2.clientX, touch1.clientY - touch2.clientY);
+          if (dist > 0) {
+            const factor = touchStartDist / dist;
+            camera.fov = Math.max(30, Math.min(95, initialFov * factor));
+            camera.updateProjectionMatrix();
+          }
+        }
+      }, { passive: true });
+
+      canvas.addEventListener('touchend', () => {
+        touchStartDist = 0;
+      }, { passive: true });
       
       // Setup window resize listener
       window.addEventListener('resize', handleResize);
@@ -542,6 +622,20 @@ export async function GET(request: Request) {
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
+    }
+
+    function zoomIn() {
+      if (camera) {
+        camera.fov = Math.max(30, camera.fov - 5);
+        camera.updateProjectionMatrix();
+      }
+    }
+
+    function zoomOut() {
+      if (camera) {
+        camera.fov = Math.min(95, camera.fov + 5);
+        camera.updateProjectionMatrix();
+      }
     }
     
     // Initialize WebGL layout
