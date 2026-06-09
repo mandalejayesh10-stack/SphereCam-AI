@@ -1,81 +1,53 @@
-import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
-import JSZip from 'jszip';
-import { getProject } from '@/lib/db';
+const fs = require('fs');
+const path = require('path');
 
-export async function GET(request: Request) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const projectId = searchParams.get('projectId');
-    const format = searchParams.get('format');
+const DB_FILE = path.join(__dirname, '..', 'data', 'db.json');
+const PUBLIC_DIR = path.join(__dirname, '..', 'public');
+const OUTPUT_FILE = path.join(PUBLIC_DIR, 'tour.html');
 
-    if (!projectId) {
-      return NextResponse.json({ error: 'Project ID is required' }, { status: 400 });
-    }
+try {
+  console.log("Loading project data...");
+  const dbData = JSON.parse(fs.readFileSync(DB_FILE, 'utf-8'));
+  const project = dbData.find(p => p.id === 'demo-living-room');
+  
+  if (!project) {
+    console.error("Error: demo-living-room project not found in db.json");
+    process.exit(1);
+  }
 
-    const project = getProject(projectId);
-    if (!project) {
-      return NextResponse.json({ error: 'Project not found' }, { status: 404 });
-    }
+  const updatedPanoramas = [];
 
-    const zip = new JSZip();
-
-    // 1. Package images folder
-    const imagesFolder = zip.folder('images');
-    const updatedPanoramas = [];
-
-    for (const pano of project.panoramas) {
-      if (pano.status === 'completed' && pano.stitchedUrl) {
-        let imageBuffer: Buffer | null = null;
-
-        if (pano.stitchedUrl.startsWith('data:image/')) {
-          try {
-            const base64Data = pano.stitchedUrl.replace(/^data:image\/\w+;base64,/, '');
-            imageBuffer = Buffer.from(base64Data, 'base64');
-          } catch (e) {
-            console.error(`Failed to decode base64 for panorama ${pano.id}`, e);
-          }
-        } else {
-          // Resolve path to the stitched image (supports public/uploads and public/samples)
-          let sourcePath = '';
-          if (pano.stitchedUrl.startsWith('/samples/')) {
-            sourcePath = path.join(process.cwd(), 'public', 'samples', path.basename(pano.stitchedUrl));
-          } else if (pano.stitchedUrl.startsWith('/uploads/')) {
-            sourcePath = path.join(process.cwd(), 'public', 'uploads', projectId, path.basename(pano.stitchedUrl));
-          }
-
-          if (sourcePath && fs.existsSync(sourcePath)) {
-            imageBuffer = fs.readFileSync(sourcePath);
-          }
-        }
-
-        if (imageBuffer) {
-          const zipImageFilename = `${pano.id}.jpg`;
-          
-          // Add to ZIP images/ folder
-          imagesFolder?.file(zipImageFilename, imageBuffer);
-
-          // Determine the correct mime type
-          let mimeType = 'image/jpeg';
-          if (pano.stitchedUrl.endsWith('.png') || pano.stitchedUrl.startsWith('data:image/png')) {
-            mimeType = 'image/png';
-          }
-
-          // Inline base64 URL inside the offline HTML to bypass browser CORS file:// policy!
-          const base64Url = `data:${mimeType};base64,${imageBuffer.toString('base64')}`;
-
-          // Update URL in offline JS bundle to point to inline base64 string
-          updatedPanoramas.push({
-            ...pano,
-            stitchedUrl: base64Url
-          });
-        }
+  for (const pano of project.panoramas) {
+    if (pano.status === 'completed' && pano.stitchedUrl) {
+      let imageBuffer = null;
+      let mimeType = 'image/jpeg';
+      
+      const sourcePath = path.join(PUBLIC_DIR, pano.stitchedUrl);
+      if (fs.existsSync(sourcePath)) {
+        imageBuffer = fs.readFileSync(sourcePath);
+      } else {
+        console.warn(`Warning: Image not found at ${sourcePath}`);
       }
-    }
 
-    // 2. Generate premium self-contained index.html template
-    const htmlTemplate = `<!DOCTYPE html>
+      if (imageBuffer) {
+        if (pano.stitchedUrl.endsWith('.png')) {
+          mimeType = 'image/png';
+        }
+        const base64Url = `data:${mimeType};base64,${imageBuffer.toString('base64')}`;
+        updatedPanoramas.push({
+          ...pano,
+          stitchedUrl: base64Url
+        });
+      } else {
+        updatedPanoramas.push(pano);
+      }
+    } else {
+      updatedPanoramas.push(pano);
+    }
+  }
+
+  console.log("Compiling premium HTML template with zoom & fullscreen button controls...");
+  const htmlTemplate = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -285,7 +257,7 @@ export async function GET(request: Request) {
       font-weight: 800;
     }
     
-    /* Zoom controls styling */
+    /* Zoom & Fullscreen controls styling */
     #zoom-controls {
       position: absolute;
       top: 20px;
@@ -669,34 +641,10 @@ export async function GET(request: Request) {
 </body>
 </html>`;
 
-    if (format === 'html') {
-      const fileName = `spherecam-tour-${project.name.toLowerCase().replace(/\s+/g, '-')}.html`;
-      return new Response(htmlTemplate, {
-        status: 200,
-        headers: {
-          'Content-Type': 'text/html; charset=utf-8',
-          'Content-Disposition': `attachment; filename="${fileName}"`
-        }
-      });
-    }
+  fs.writeFileSync(OUTPUT_FILE, htmlTemplate, 'utf-8');
+  console.log(`Successfully generated public/tour.html with latest HTML template zoom & fullscreen controls!`);
 
-    zip.file('index.html', htmlTemplate);
-
-    // 3. Compress ZIP in memory
-    const zipBuffer = await zip.generateAsync({ type: 'nodebuffer' });
-
-    // 4. Return as attachment stream download
-    const fileNameZip = `spherecam-tour-${project.name.toLowerCase().replace(/\s+/g, '-')}.zip`;
-    return new Response(new Uint8Array(zipBuffer), {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/zip',
-        'Content-Disposition': `attachment; filename="${fileNameZip}"`
-      }
-    });
-
-  } catch (error) {
-    console.error('API Error: GET download-tour zip archive', error);
-    return NextResponse.json({ error: 'Failed to compile and package virtual tour zip archive' }, { status: 500 });
-  }
+} catch (err) {
+  console.error("Failed to generate static tour file:", err);
+  process.exit(1);
 }

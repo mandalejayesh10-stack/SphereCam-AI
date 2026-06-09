@@ -4,7 +4,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { Hotspot } from '../lib/types';
-import { HelpCircle, ArrowRight, Info, Plus } from 'lucide-react';
+import { HelpCircle, ArrowRight, Info, Plus, Maximize2, Minimize2 } from 'lucide-react';
 
 interface ThreeViewerProps {
   imageUrl: string;
@@ -35,6 +35,30 @@ export default function ThreeViewer({
     y: number;
     visible: boolean;
   }>>([]);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
+  const handleToggleFullscreen = () => {
+    if (!containerRef.current) return;
+    
+    if (!document.fullscreenElement) {
+      containerRef.current.requestFullscreen().catch((err) => {
+        console.error("Error enabling fullscreen:", err);
+      });
+    } else {
+      document.exitFullscreen();
+    }
+  };
 
   // Store references for the animation loop
   const stateRef = useRef<{
@@ -354,8 +378,15 @@ export default function ThreeViewer({
         );
       })}
 
-      {/* Zoom Controls Overlay */}
+      {/* Zoom & Screen Controls Overlay */}
       <div className="absolute bottom-4 right-4 z-40 flex flex-col gap-1.5">
+        <button
+          onClick={handleToggleFullscreen}
+          className="w-8 h-8 rounded-lg bg-black/60 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-black/80 hover:scale-105 active:scale-95 transition-all text-sm shadow-md cursor-pointer"
+          title="Toggle Fullscreen"
+        >
+          {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+        </button>
         <button
           onClick={handleZoomIn}
           className="w-8 h-8 rounded-lg bg-black/60 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-black/80 hover:scale-105 active:scale-95 transition-all text-base font-bold shadow-md cursor-pointer"
